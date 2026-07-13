@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Café Martens \u0026 More",
+  "description": "Strona internetowa kawiarni Café Martens \u0026 More w Goch z interaktywnym menu podzielonym na strefy oraz galerią automatycznie uaktualnianą i synchronizowaną z Facebookiem.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

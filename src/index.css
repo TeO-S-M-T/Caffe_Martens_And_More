@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+:root {
+  --color-natural-bg: #fdfcf7;
+  --color-natural-text: #4a3b2b;
+  --color-natural-muted: #8c8c73;
+  --color-natural-primary: #5A5A40;
+  --color-natural-primary-hover: #43432f;
+  --color-natural-border: #e2e2d5;
+  --color-natural-card-border: #ecece0;
+  --color-natural-light: #f5f5f0;
+  --color-natural-light-hover: #f9f9f2;
+}
+
+.dark {
+  --color-natural-bg: #11100e;
+  --color-natural-text: #f0ede4;
+  --color-natural-muted: #9e9c8a;
+  --color-natural-primary: #bfa886;
+  --color-natural-primary-hover: #d2bca0;
+  --color-natural-border: #2d2922;
+  --color-natural-card-border: #3b352b;
+  --color-natural-light: #191714;
+  --color-natural-light-hover: #221f1a;
+}
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-natural-bg: var(--color-natural-bg);
+  --color-natural-text: var(--color-natural-text);
+  --color-natural-muted: var(--color-natural-muted);
+  --color-natural-primary: var(--color-natural-primary);
+  --color-natural-primary-hover: var(--color-natural-primary-hover);
+  --color-natural-border: var(--color-natural-border);
+  --color-natural-card-border: var(--color-natural-card-border);
+  --color-natural-light: var(--color-natural-light);
+  --color-natural-light-hover: var(--color-natural-light-hover);
+}
