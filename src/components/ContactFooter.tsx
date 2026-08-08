@@ -20,7 +20,7 @@ export default function ContactFooter() {
       {
         author: "Mikołaj Z.",
         rating: 5,
-        text: "Ein echtes Juwel auf der Frauenstraße. Das Frühstück 'Martens Special' mit pochiertem Ei und Avocado ist absolute Spitzenklasse. Sehr freundliches und lächelndes Personal, die Atmosphäre lädt zum Entspannen ein.",
+        text: "Ein echtes Juwel am Markt. Das Frühstück 'Martens Special' mit pochiertem Ei und Avocado ist absolute Spitzenklasse. Sehr freundliches und lächelndes Personal, die Atmosphäre lädt zum Entspannen ein.",
         date: "Vor 2 Wochen",
         source: "Facebook"
       },
@@ -43,7 +43,7 @@ export default function ContactFooter() {
       {
         author: "Mikołaj Z.",
         rating: 5,
-        text: "Prawdziwa perełka na Frauenstraße. Śniadanie 'Martens Special' z jajkiem w koszulce i awokado to mistrzostwo świata. Bardzo miła i uśmiechnięta obsługa, a atmosfera pozwala całkowicie się zrelaksować.",
+        text: "Prawdziwa perełka przy rynku w Goch. Śniadanie 'Martens Special' z jajkiem w koszulce i awokado to mistrzostwo świata. Bardzo miła i uśmiechnięta obsługa, a atmosfera pozwala całkowicie się zrelaksować.",
         date: "2 tygodnie temu",
         source: "Facebook"
       },
@@ -66,7 +66,7 @@ export default function ContactFooter() {
       {
         author: "Mikołaj Z.",
         rating: 5,
-        text: "A true hidden gem on Frauenstraße. The 'Martens Special' breakfast with poached egg and avocado is absolutely out of this world. Very nice and friendly staff, and the atmosphere lets you completely relax.",
+        text: "A true hidden gem on the market square. The 'Martens Special' breakfast with poached egg and avocado is absolutely out of this world. Very nice and friendly staff, and the atmosphere lets you completely relax.",
         date: "2 weeks ago",
         source: "Facebook"
       },
@@ -191,7 +191,7 @@ export default function ContactFooter() {
                 <div>
                   <h5 className="text-xs font-bold text-[#fdfcf7] uppercase tracking-wide">{t.addressHeader}</h5>
                   <p className="text-[#ecece0]/80 text-xs mt-1">
-                    Frauenstraße 16<br />
+                    Markt 12<br />
                     47574 Goch, {language === "pl" ? "Niemcy" : "Germany"}
                   </p>
                 </div>
@@ -203,9 +203,9 @@ export default function ContactFooter() {
                 </div>
                 <div>
                   <h5 className="text-xs font-bold text-[#fdfcf7] uppercase tracking-wide">{t.phoneHeader}</h5>
-                  <p className="text-[#ecece0]/80 text-xs mt-1">
-                    +49 2823 9276495
-                  </p>
+                  <a href="tel:+4928234191522" className="text-[#ecece0]/80 hover:text-white text-xs mt-1 block transition-colors">
+                    02823 4191522
+                  </a>
                 </div>
               </div>
 
@@ -215,9 +215,9 @@ export default function ContactFooter() {
                 </div>
                 <div>
                   <h5 className="text-xs font-bold text-[#fdfcf7] uppercase tracking-wide">{t.emailHeader}</h5>
-                  <p className="text-[#ecece0]/80 text-xs mt-1">
-                    kontakt@caffe-martens.com
-                  </p>
+                  <a href="mailto:cafemartensinfo@gmail.com" className="text-[#ecece0]/80 hover:text-white text-xs mt-1 block transition-colors">
+                    cafemartensinfo@gmail.com
+                  </a>
                 </div>
               </div>
             </div>
@@ -268,11 +268,11 @@ export default function ContactFooter() {
 
                 <div className="absolute top-8 left-6 text-left">
                   <span className="text-[10px] text-[#c3c3b0] font-mono block">Goch City Center</span>
-                  <span className="text-xs text-[#ecece0] font-medium font-serif">Frauenstraße</span>
+                  <span className="text-xs text-[#ecece0] font-medium font-serif">Markt</span>
                 </div>
 
                 <div className="absolute bottom-16 right-6 text-right">
-                  <span className="text-xs text-[#ecece0] font-medium font-serif">Susannastraße</span>
+                  <span className="text-xs text-[#ecece0] font-medium font-serif">Rathaus Goch</span>
                 </div>
 
                 {/* Map details container badge overlay */}
@@ -285,7 +285,7 @@ export default function ContactFooter() {
               </div>
 
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Cafe+Martens+More+Frauenstr+Goch+Germany"
+                href="https://www.google.com/maps/search/?api=1&query=Cafe+Martens+%26+More+Markt+12+47574+Goch+Germany"
                 target="_blank"
                 className="w-full py-3 bg-[#383827] hover:bg-[#51513a] border border-[#51513a] rounded-2xl text-xs font-mono tracking-wide text-[#ecece0] hover:text-[#fdfcf7] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
@@ -306,6 +306,8 @@ export default function ContactFooter() {
             <a href="#co-chcesz" className="hover:text-white">{t.navZones}</a>
             <span>•</span>
             <a href="#karta-menu" className="hover:text-white">{t.navMenu}</a>
+            <span>•</span>
+            <a href="#catering" className="hover:text-white">{t.navCatering}</a>
             <span>•</span>
             <a href="#galeria-fb" className="hover:text-white">{t.navGallery}</a>
           </div>

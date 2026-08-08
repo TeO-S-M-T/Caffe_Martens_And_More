@@ -27,17 +27,17 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
     de: {
       news: "Normales Feed",
       events: "Events & Shows (#Event)",
-      noEvents: "Aktuell sind keine speziellen Veranstaltungen mit der Kennzeichnung #Event vorhanden. Bitte klicken Sie oben auf 'Mit Facebook synchronisieren', um Live-Daten abzufordern!",
+      noEvents: "Aktuell sind keine Beiträge mit der Kennzeichnung #Event vorhanden. Unsere Termine finden Sie im Veranstaltungskalender weiter unten.",
     },
     pl: {
       news: "Aktualności",
       events: "Galeria Wydarzeń (#Event)",
-      noEvents: "Aktualnie nie pobrano nowych wydarzeń z dopiskiem #Event. Kliknij przycisk 'Synchronizuj z Facebookiem' powyżej, aby odpytać serwer na żywo przy użyciu AI!",
+      noEvents: "Aktualnie nie ma postów z dopiskiem #Event. Nasze terminy znajdziesz w kalendarzu wydarzeń poniżej.",
     },
     en: {
       news: "Baseline Updates",
       events: "Upcoming Events (#Event)",
-      noEvents: "No special events containing the #Event tag were found in cache. Click 'Synchronize with Facebook' above to search live via Gemini!",
+      noEvents: "No posts containing the #Event tag were found. You'll find our dates in the event calendar below.",
     }
   };
 
@@ -45,8 +45,8 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
   const syncStepsDe = [
     "Verbindung mit Facebook Graph API Servern wird hergestellt...",
     "Frage Café-Profil @profile.php?id=61584459111985 ab...",
-    "Starte Such- und Analyse-Crawler für Goch...",
-    "Verarbeite die neuesten Einträge über den Gemini AI Copilot...",
+    "Lese den Beitrags-Feed der Seite...",
+    "Verarbeite die neuesten Einträge der Seite...",
     "Lade und synchronisiere aktuelle Fotos...",
     "Datenbanksynchronisierung wird abgeschlossen..."
   ];
@@ -54,8 +54,8 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
   const syncStepsPl = [
     "Łączenie z serwerami Graph API Facebook...",
     "Odpytywanie profilu kawiarni @profile.php?id=61584459111985...",
-    "Uruchamianie wyszukiwarki i parsera postów z Goch...",
-    "Przetwarzanie najnowszych wpisów przez robota AI...",
+    "Wczytywanie kanału postów ze strony...",
+    "Przetwarzanie najnowszych wpisów ze strony...",
     "Pobieranie i synchronizowanie zdjęć...",
     "Kończenie synchronizacji bazy danych..."
   ];
@@ -63,9 +63,9 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
   const syncStepsEn = [
     "Connecting to Facebook Graph API servers...",
     "Querying cafe profile @profile.php?id=61584459111985...",
-    "Launching Search crawler and post parser for Goch...",
-    "Processing recent entries using Gemini AI models...",
-    "Downloading and synchronizing photos from Frauenstraße...",
+    "Reading the page's post feed...",
+    "Processing the most recent page entries...",
+    "Downloading and synchronizing photos from Markt 12...",
     "Completing database synchronization..."
   ];
 
@@ -243,8 +243,8 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
                   ) : (
                     syncMessage || (
                       language === "de" ? "Aktuelle Facebook-Beiträge wurden geladen und für Sie bereitgestellt." :
-                      language === "pl" ? "Przeanalizowano nowe wpisy i zebrano najświeższe zdjęcia oraz oferty z Frauenstraße." :
-                      "Retrieved and compiled the latest postings and seasonal offers from Frauenstraße."
+                      language === "pl" ? "Przeanalizowano nowe wpisy i zebrano najświeższe zdjęcia oraz oferty z rynku w Goch." :
+                      "Retrieved and compiled the latest postings and seasonal offers from Markt 12."
                     )
                   )}
                 </p>
@@ -452,7 +452,7 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
         </AnimatePresence>
 
         {/* Dynamic Interactive Event Calendar Widget based on Facebook feeds */}
-        <EventCalendar posts={posts} />
+        <EventCalendar />
 
         {/* Facebook Page Stats banner card */}
         <div className="mt-16 p-6 rounded-3xl bg-natural-light border border-natural-card-border flex flex-col md:flex-row items-center justify-between gap-6">

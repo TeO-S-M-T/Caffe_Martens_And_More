@@ -93,7 +93,7 @@ export const MENU_DETAILS_DATA: Record<string, MenuItemDetails> = {
     pl: {
       ingredients: ["Delikatne, cienkie ciasto makaronowe", "Receptura do wyboru: serowo-ziemniaczana (ruskie) / soczyste mięso wieprzowe / duszona kapusta kiszona z leśnymi grzybami", "Złocista okrasa z cebulki na maśle", "Opcjonalnie gęsta śmietana 18%"],
       allergens: ["Gluten (mąka pszenna)", "Mleko (twaróg w ruskich, masło)", "Jaja (zawarte w elastycznym cieście)"],
-      baristaTip: "Nasze pierogi lepimy ręcznie według starego rodzinnego przepisu właściciela. To unikalny polski akcent na Frauenstraße!"
+      baristaTip: "Nasze pierogi lepimy ręcznie według starego rodzinnego przepisu właściciela. To unikalny polski akcent przy rynku w Goch!"
     },
     en: {
       ingredients: ["Delicate handmade pasta dough", "Choice of filling: Creamy curd & potato / Rich minced pork loin / Sour-savory sauerkraut & forest mushrooms", "Melted butter & caramelized golden onions", "Optional side of fresh sour cream"],
@@ -412,7 +412,7 @@ export const MENU_DETAILS_DATA: Record<string, MenuItemDetails> = {
     de: {
       ingredients: ["Premium loser schwarzer Tee (Ceylon)", "Pfirsich-Fruchtextrakt-Sirup", "Frische Blätter der Zitronenmelisse", "Eiswürfel, Orangenscheibe"],
       allergens: [],
-      baristaTip: "Die Zitronenmelisse pflücken wir täglich frisch direkt aus unserem schattigen Kaffeegarten hinter der Frauenstraße."
+      baristaTip: "Die Zitronenmelisse pflücken wir täglich frisch direkt aus unserem schattigen Kaffeegarten hinter dem Café am Markt."
     },
     pl: {
       ingredients: ["Napar z czarnej liściastej herbaty Ceylon", "Naturalny gęsty syrop brzoskwiniowy", "Świeże liście melisy lekarskiej", "Lód w kostkach, plasterek pomarańczy"],

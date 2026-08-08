@@ -6,6 +6,7 @@ import Logo from "./components/Logo";
 import Header from "./components/Header";
 import CoChceszZone from "./components/CoChceszZone";
 import MenuGrid from "./components/MenuGrid";
+import CateringSection from "./components/CateringSection";
 import FbGallery from "./components/FbGallery";
 import ContactFooter from "./components/ContactFooter";
 import AdminPanel from "./components/AdminPanel";
@@ -212,6 +213,7 @@ export default function App() {
               <a href="#glowna" className="hover:text-natural-primary transition-colors">{t.navHome}</a>
               <a href="#co-chcesz" className="hover:text-natural-primary transition-colors">{t.navZones}</a>
               <a href="#karta-menu" className="hover:text-natural-primary transition-colors">{t.navMenu}</a>
+              <a href="#catering" className="hover:text-natural-primary transition-colors">{t.navCatering}</a>
               <a href="#galeria-fb" className="hover:text-natural-primary transition-colors">{t.navGallery}</a>
               <a href="#kontakt" className="hover:text-natural-primary transition-colors font-bold text-natural-primary">{t.navContact}</a>
             </div>
@@ -307,11 +309,14 @@ export default function App() {
             />
           )}
 
-          {/* SECTION 4: Synchronized Facebook Live Gallery */}
+          {/* SECTION 4: Business Catering offer */}
+          <CateringSection />
+
+          {/* SECTION 5: Synchronized Facebook Live Gallery */}
           <FbGallery refreshTrigger={refreshTrigger} />
         </main>
 
-        {/* SECTION 5: Contact footer containing hours, map, reviews */}
+        {/* SECTION 6: Contact footer containing hours, map, reviews */}
         <ContactFooter />
 
         {/* Modal-style Admin Panel */}

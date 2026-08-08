@@ -178,7 +178,7 @@ export default function MenuGrid({ items, selectedCategory, onSelectCategory }: 
                     <div className="mt-5 pt-3 border-t border-natural-border/40 flex items-center justify-between">
                       <div>
                         <span className="font-serif text-natural-primary text-lg font-bold">
-                          {item.priceEur.toFixed(2)} €
+                          {language === "en" ? item.priceEur.toFixed(2) : item.priceEur.toFixed(2).replace(".", ",")} €
                         </span>
                       </div>
 

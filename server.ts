@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { GoogleGenAI } from "@google/genai";
 import { createServer as createViteServer } from "vite";
 import { MenuCategory, MenuItem, FacebookPost } from "./src/types";
 
@@ -10,27 +9,7 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
-// Lazy initialization of Gemini client as per guidelines
-let aiClient: GoogleGenAI | null = null;
-function getGemini() {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key || key === "MY_GEMINI_API_KEY") {
-      return null;
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
-  }
-  return aiClient;
-}
+const PORT = Number(process.env.PORT) || 3000;
 
 // ----------------------------------------------------------------------
 // Localized Static Menu Database (supporting DE, PL, EN)
@@ -51,89 +30,89 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
   {
     id: "sn_1",
     category: MenuCategory.SNIADANIA,
-    priceEur: 11.90,
-    pricePln: 51.00,
+    priceEur: 6.00,
+    pricePln: 25.80,
     imageUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Frühstück 'Martens Special'",
-      pl: "Śniadanie 'Martens Special'",
-      en: "Breakfast 'Martens Special'"
+      de: "Kleines Frühstück",
+      pl: "Małe Śniadanie",
+      en: "Small Breakfast"
     },
     description: {
-      de: "Zwei frische pochierte Eier auf hausgemachtem handwerklichem Brot mit reifer, cremiger Avocado, Scheiben von regionalem Schinken, Kirschtomaten und frischen Sprossen.",
-      pl: "Dwa świeże jajka w koszulce ułożone na domowym chlebie rzemieślniczym z dojrzałym kremowym awokado, plastrami regionalnej szynki, pomidorkami i posypką z kiełków.",
-      en: "Two fresh poached eggs served on homemade olive or sourdough artisan bread with ripe creamy avocado, regional ham slices, cherry tomatoes, and microgreens."
+      de: "1 Brötchen, frisch für Sie belegt von unserem Team, dazu 1 Kaffee, Cappuccino oder Tee. Rührei oder Spiegelei jederzeit für nur 2,50 € extra.",
+      pl: "1 bułka świeżo przygotowana przez nasz zespół oraz 1 kawa, cappuccino lub herbata. Jajecznica lub jajko sadzone w każdej chwili za dopłatą 2,50 €.",
+      en: "1 freshly filled bread roll prepared by our team, plus 1 coffee, cappuccino or tea. Scrambled or fried egg any time for just €2.50 extra."
     },
     tags: {
-      de: ["Empfohlen", "Aus der Region"],
-      pl: ["Polecane", "Region"],
-      en: ["Recommended", "Local"]
+      de: ["Frühstück", "Täglich"],
+      pl: ["Śniadanie", "Codziennie"],
+      en: ["Breakfast", "Daily"]
     }
   },
   {
     id: "sn_2",
     category: MenuCategory.SNIADANIA,
     priceEur: 10.50,
-    pricePln: 45.50,
+    pricePln: 45.15,
     imageUrl: "https://images.unsplash.com/photo-1496042300028-e7416057a90b?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Frühstücksteller 'Niederrhein-Garten'",
-      pl: "Talerz Śniadaniowy 'Ogród Niederrhein'",
-      en: "Breakfast Platter 'Niederrhein Garden'"
+      de: "Frühstück PLUS",
+      pl: "Śniadanie PLUS",
+      en: "Breakfast PLUS"
     },
     description: {
-      de: "Handwerklicher deutscher Käse, frischer hausgemachter Kräuterquark, Honig direkt aus der lokalen Gocher Imkerei, frische Weintrauben und ein Korb mit warmem, duftendem Brot und Butter.",
-      pl: "Rzemieślnicze niemieckie sery, świeży domowy twaróg ziołowy, miód prosto z lokalnej pasieki w Goch, świeże winogrona oraz koszyk ciepłego, pachnącego pieczywa z masłem.",
-      en: "Artisanal German cheeses, fresh homemade herb curd, honey straight from a local Goch apiary, fresh grapes, and a basket of warm, aromatic bread with butter."
+      de: "2 Brötchen, frisch für Sie belegt, dazu 1 Kaffee, Cappuccino oder Tee. Perfekt für den größeren Hunger — unser Tipp! Rührei oder Spiegelei für 2,50 € extra.",
+      pl: "2 bułki świeżo przygotowane dla Ciebie oraz 1 kawa, cappuccino lub herbata. Idealne przy większym głodzie — nasza rekomendacja! Jajecznica lub jajko sadzone za 2,50 €.",
+      en: "2 freshly filled bread rolls plus 1 coffee, cappuccino or tea. Perfect for a bigger appetite — our tip! Scrambled or fried egg for €2.50 extra."
     },
     tags: {
-      de: ["Vegetarisch", "Lokal"],
-      pl: ["Wegetariańskie", "Lokalne"],
-      en: ["Vegetarian", "Local"]
+      de: ["Unser Tipp", "Frühstück"],
+      pl: ["Polecane", "Śniadanie"],
+      en: ["Our Tip", "Breakfast"]
     }
   },
   {
     id: "sn_3",
     category: MenuCategory.SNIADANIA,
-    priceEur: 8.90,
-    pricePln: 38.50,
-    imageUrl: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=600&auto=format&fit=crop",
+    priceEur: 15.00,
+    pricePln: 64.50,
+    imageUrl: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Luftige Pancakes 'Süßer Morgen'",
-      pl: "Puszyste Pancakes Słodki Poranek",
-      en: "Fluffy Pancakes 'Sweet Morning'"
+      de: "Frühstücksbuffet (Montag – Freitag)",
+      pl: "Bufet Śniadaniowy (poniedziałek – piątek)",
+      en: "Breakfast Buffet (Monday – Friday)"
     },
     description: {
-      de: "Drei dicke, wunderbar luftige amerikanische Pancakes, serviert mit frischen Waldbeeren, fluffiger Schlagsahne und echtem Bio-Ahornsirup.",
-      pl: "Trzy grube, niezwykle puszyste amerykańskie naleśniki podawane ze świeżymi owocami leśnymi, puszystą bitą śmietaną oraz prawdziwym organicznym syropem klonowym.",
-      en: "Three thick, incredibly fluffy American pancakes served with fresh wild berries, whipped cream, and genuine organic maple syrup."
+      de: "Große Auswahl an Brötchen und Brot, Aufschnitt, Käse, Marmeladen, frisches Gemüse, Joghurt, Müsli sowie Kaffee, Tee und Säfte. So viel Sie möchten — genießen Sie nach Herzenslust!",
+      pl: "Duży wybór bułek i chleba, wędliny, sery, dżemy, świeże warzywa, jogurt, musli oraz kawa, herbata i soki. Tyle, ile chcesz — do woli!",
+      en: "A large selection of rolls and bread, cold cuts, cheese, jams, fresh vegetables, yoghurt, muesli plus coffee, tea and juices. As much as you like!"
     },
     tags: {
-      de: ["Süß", "Für Kinder"],
-      pl: ["Na słodko", "Dla dzieci"],
-      en: ["Sweet", "Kids Option"]
+      de: ["Buffet", "Mo – Fr"],
+      pl: ["Bufet", "Pn – Pt"],
+      en: ["Buffet", "Mon – Fri"]
     }
   },
   {
     id: "sn_4",
     category: MenuCategory.SNIADANIA,
-    priceEur: 9.80,
-    pricePln: 42.00,
+    priceEur: 18.90,
+    pricePln: 81.30,
     imageUrl: "https://images.unsplash.com/photo-1590412200988-a436bb705300?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Frauenstraße Shakshuka",
-      pl: "Szakszuka z Frauenstraße",
-      en: "Frauenstraße Shakshuka"
+      de: "Frühstücksbuffet (Samstag, Sonntag & Feiertage)",
+      pl: "Bufet Śniadaniowy (sobota, niedziela i święta)",
+      en: "Breakfast Buffet (Saturday, Sunday & holidays)"
     },
     description: {
-      de: "Drei Bio-Eier, pochiert in einer mild-pikanten, aromatischen Sauce aus frischen Tomaten, roter Paprika und Zwiebeln, bestreut mit Feta-Käse und frischem Koriander.",
-      pl: "Trzy ekologiczne jajka duszone w delikatnie pikantnym, aromatycznym sosie ze świeżych pomidorów, czerwonej papryki i cebuli, posypane serem feta i świeżą kolendrą.",
-      en: "Three organic eggs poached in a gently spiced, flavorful sauce of fresh tomatoes, red peppers, and onions, sprinkled with feta cheese and fresh cilantro."
+      de: "Alles aus unserem Frühstücksbuffet und dazu: frisch zubereitetes Spiegelei oder Rührei, Bacon nach Wunsch sowie Kaffee, Tee und Säfte inklusive. Alles in diesem Preis — keine Zusatzkosten!",
+      pl: "Wszystko z naszego bufetu śniadaniowego, a do tego: świeżo przygotowane jajko sadzone lub jajecznica, bekon według życzenia oraz kawa, herbata i soki w cenie. Wszystko w tej cenie — bez dopłat!",
+      en: "Everything from our breakfast buffet plus: freshly prepared fried or scrambled eggs, bacon on request, and coffee, tea and juices included. All in this price — no extra costs!"
     },
     tags: {
-      de: ["Vegetarisch", "Pikant"],
-      pl: ["Wegetariańskie", "Pikantne"],
-      en: ["Vegetarian", "Spicy"]
+      de: ["Buffet", "Wochenende"],
+      pl: ["Bufet", "Weekend"],
+      en: ["Buffet", "Weekend"]
     }
   },
 
@@ -141,155 +120,221 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
   {
     id: "ob_1",
     category: MenuCategory.OBIADY,
-    priceEur: 10.50,
-    pricePln: 45.00,
-    imageUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=600&auto=format&fit=crop",
+    priceEur: 12.90,
+    pricePln: 55.50,
+    imageUrl: "https://images.unsplash.com/photo-1571115177098-24ec42095185?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Traditionelle Piroggen / Pierogi Domowe",
-      pl: "Tradycyjne Pierogi Domowe",
-      en: "Traditional Polish Pierogi"
+      de: "Łazanki mit Weißkohl und Wurst",
+      pl: "Łazanki z białą kapustą i kiełbasą",
+      en: "Łazanki with white cabbage and sausage"
     },
     description: {
-      de: "Handgemachte goldbraun angerichtete Piroggen nach Wahl: mit Kartoffel-Käse-Füllung (Ruskie), herzhafter Fleischfüllung oder Sauerkraut und Waldpilzen. Serviert mit Schmelzzwiebeln.",
-      pl: "Tradycyjne rzemieślnicze pierogi ręcznie lepione, do wyboru: ruskie (z twarogiem i ziemniakami), z soczystym farszem mięsnym lub z kapustą i leśnymi grzybami. Podawane z pachnącą okrasą z cebulki.",
-      en: "Traditional handmade dumplings cooked to perfection, choice of: potato-cheese (Ruskie), flavorful minced meat, or tangy sauerkraut & forest mushrooms. Served with savory melted onions."
+      de: "Hausgemachte Łazanki-Nudeln mit geschmortem Weißkohl und kräftiger Wurst. Am Samstag, 01.08. auf unserer Wochenendkarte.",
+      pl: "Domowe łazanki z duszoną białą kapustą i aromatyczną kiełbasą. W sobotę 01.08 w karcie weekendowej.",
+      en: "Homemade Łazanki noodles with braised white cabbage and hearty sausage. On the weekend card Saturday 01.08."
     },
     tags: {
-      de: ["Teigtaschen", "Hausgemacht"],
-      pl: ["Ręcznie lepione", "Klasyk"],
-      en: ["Handmade", "Traditional"]
+      de: ["Wochenend-Menü", "Sa 01.08."],
+      pl: ["Menu weekendowe", "Sb 01.08"],
+      en: ["Weekend Menu", "Sat 01.08"]
     }
   },
   {
     id: "ob_2",
     category: MenuCategory.OBIADY,
-    priceEur: 8.50,
-    pricePln: 36.50,
-    imageUrl: "https://images.unsplash.com/photo-1509722747041-616f39b57569?q=80&w=600&auto=format&fit=crop",
+    priceEur: 21.90,
+    pricePln: 94.20,
+    imageUrl: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Rzemieślnicza Zapiekanka Uson",
-      pl: "Zapiekanka Uson (Z pieczarkami i szynką)",
-      en: "Artisanal Zapiekanka Uson"
+      de: "Rinderroulade mit Schlesischen Klößen",
+      pl: "Rolada wołowa ze śląskimi kluskami",
+      en: "Beef roulade with Silesian dumplings"
     },
     description: {
-      de: "Frisch im Ofen gebackenes polnisches Rbg-Baguette mit weißen Champignons, saftigem Schinken, feinstem schmelzenden Käse und knackigen Gemüsestreifen. Fragen Sie auch nach unseren Sorten Standard, Klasik, Pikantna i Hawaii!",
-      pl: "Chrupiąca rzemieślnicza zapiekanka na świeżej półbagietce z pieczarkami, szynką, serem i warzywami zapiekana z sercem w piecu. Do wyboru także inne smaki z karty: Standard, Klasik, Pikantna, Hawaii, Kurczak i Warzywna!",
-      en: "Crispy local house-baked open-faced baguette (Zapiekanka) loaded with forest mushrooms, savory ham, creamy cheese, and fresh market veggies. Ask for our Standard, Klasik, Spicy, or Hawaii choices!"
+      de: "Zarte Rinderroulade mit Schlesischen Klößen und Roter Bete. Inklusive hausgemachter Hühnersuppe (Rosół) vorweg. Sonntag, 02.08.",
+      pl: "Delikatna rolada wołowa ze śląskimi kluskami i burakami. W cenie domowy rosół na przystawkę. Niedziela 02.08.",
+      en: "Tender beef roulade with Silesian dumplings and beetroot. Homemade chicken soup (Rosół) included. Sunday 02.08."
     },
     tags: {
-      de: ["Baguette", "Heiß serviert"],
-      pl: ["Z pieca", "Bestseller"],
-      en: ["Warm Bread", "Popular"]
+      de: ["Mit Rosół", "So 02.08."],
+      pl: ["Z rosołem", "Nd 02.08"],
+      en: ["With Rosół", "Sun 02.08"]
     }
   },
   {
     id: "ob_3",
     category: MenuCategory.OBIADY,
-    priceEur: 12.90,
-    pricePln: 55.00,
-    imageUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=600&auto=format&fit=crop",
+    priceEur: 6.90,
+    pricePln: 29.70,
+    imageUrl: "https://images.unsplash.com/photo-1547592165-e1d17fed6006?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Altpolnisches Gulasch / Gulasz Wołowy",
-      pl: "Gulasz Tradycyjny (Długo gotowany)",
-      en: "Traditional Old-Polish Goulash"
+      de: "Erbsensuppe",
+      pl: "Zupa grochowa",
+      en: "Pea soup"
     },
     description: {
-      de: "Traditionelles, altpolnisches Gulasch, langanhaltend geschmort, mit butterzartem Fleisch, Karotten, Paprika und einer aromatischen, dunklen Kräutersauce.",
-      pl: "Tradycyjny, staropolski gulasz, niezwykle długo gotowany dla uzyskania wyjątkowej kruchości mięsa wołowo-wieprzowego, w bogatym aromatycznym sosie warzywnym.",
-      en: "Traditional old-Polish beef & pork goulash stew, slow-cooked for hours to achieve melt-in-your-mouth tenderness in rich, herb-and-vegetable infused gravy."
+      de: "Deftige Erbsensuppe mit Würstchen und frischem Gemüse — wärmend, sättigend und hausgemacht. Samstag, 08.08.",
+      pl: "Sycąca zupa grochowa z kiełbaskami i świeżymi warzywami — rozgrzewająca i domowa. Sobota 08.08.",
+      en: "Hearty pea soup with sausage and fresh vegetables — warming, filling and homemade. Saturday 08.08."
     },
     tags: {
-      de: ["Deftig", "Lange gekocht"],
-      pl: ["Sycące", "Tradycyjne"],
-      en: ["Filling", "Slow Cooked"]
+      de: ["Suppe", "Sa 08.08."],
+      pl: ["Zupa", "Sb 08.08"],
+      en: ["Soup", "Sat 08.08"]
     }
   },
   {
     id: "ob_4",
     category: MenuCategory.OBIADY,
-    priceEur: 11.50,
-    pricePln: 49.00,
-    imageUrl: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?q=80&w=600&auto=format&fit=crop",
+    priceEur: 16.90,
+    pricePln: 72.70,
+    imageUrl: "https://images.unsplash.com/photo-1626700051175-6518c4793f0f?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Klassische Kohlrouladen / Gołąbki w Sosie",
-      pl: "Tradycyjne Gołąbki w sosie pomidorowym",
-      en: "Traditional Cabbage Rolls (Gołąbki)"
+      de: "Schweineschnitzel mit Erbsen & Möhren",
+      pl: "Kotlet schabowy z groszkiem i marchewką",
+      en: "Pork schnitzel with peas & carrots"
     },
     description: {
-      de: "Traditionelle Kohlrouladen gefüllt mit gemischtem Hackfleisch und Reis, liebevoll gewickelt in sanfte Kohlblätter, übergossen mit samtiger Tomatensauce, serviert mit Salzkartoffeln.",
-      pl: "Tradycyjne domowe gołąbki z delikatnym mięsem wieprzowym i ryżem, zawijane w liście białej kapusty, polane gęstym domowym sosem pomidorowym, podawane z ziemniakami z koperkiem.",
-      en: "Authentic hand-rolled cabbage leaves stuffed with seasoned minced pork and rice, smothered in a velvety rich tomato sauce, served with buttered boiled potatoes."
+      de: "Goldbraunes Schweineschnitzel mit Erbsen & Möhren, Salzkartoffeln und frischem Salat. Inklusive hausgemachter Hühnersuppe. Sonntag, 09.08.",
+      pl: "Złocisty kotlet schabowy z groszkiem i marchewką, ziemniakami i świeżą sałatką. W cenie domowy rosół. Niedziela 09.08.",
+      en: "Golden pork schnitzel with peas & carrots, boiled potatoes and fresh salad. Chicken soup included. Sunday 09.08."
     },
     tags: {
-      de: ["Klassiker", "Mit Kartoffeln"],
-      pl: ["Domowe smaki", "Z ziemniakami"],
-      en: ["House Specialty", "With Potatoes"]
+      de: ["Mit Rosół", "So 09.08."],
+      pl: ["Z rosołem", "Nd 09.08"],
+      en: ["With Rosół", "Sun 09.08"]
     }
   },
   {
     id: "ob_5",
     category: MenuCategory.OBIADY,
-    priceEur: 9.80,
-    pricePln: 42.00,
-    imageUrl: "https://images.unsplash.com/photo-1547592165-e1d17fed6006?q=80&w=600&auto=format&fit=crop",
+    priceEur: 12.90,
+    pricePln: 55.50,
+    imageUrl: "https://images.unsplash.com/photo-1571115177098-24ec42095185?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Aromatischer Żurek im Brotlaib / Sauermehlsuppe",
-      pl: "Aromatyczny Żurek w Chlebie",
-      en: "Sour Rye Soup in Bread Bowl (Żurek)"
+      de: "Spaghetti Bolognese",
+      pl: "Spaghetti Bolognese",
+      en: "Spaghetti Bolognese"
     },
     description: {
-      de: "Schmackhafte, saure Mehlsuppe auf echtem, hausgemachtem Roggensauerteig, mit weißer Landwurst, geräuchertem Speck und Ei, serviert in einem knusprigen, ofenwarmen Brotlaib.",
-      pl: "Tradycyjny, niezwykle aromatyczny żurek na prawdziwym domowym zakwasie żytnim, z dodatkiem białej kiełbasy, boczku i jajka, serwowany w specjalnie wypiekanym chrupiącym bochenku chleba.",
-      en: "Traditional Polish sour rye soup crafted on organic wild-fermented sourdough starter with white sausage, smoked bacon, and a boiled egg, served inside an oven-toasted artisan sourdough bread bowl."
+      de: "Unsere Spaghetti Bolognese mit lange geschmorter Hackfleischsauce und frisch geriebenem Käse. Samstag, 15.08.",
+      pl: "Nasze spaghetti bolognese z długo duszonym sosem mięsnym i świeżo startym serem. Sobota 15.08.",
+      en: "Our spaghetti bolognese with slow-simmered meat sauce and freshly grated cheese. Saturday 15.08."
     },
     tags: {
-      de: ["Im Brotlaib", "Bestseller"],
-      pl: ["W chlebie", "Ulubione"],
-      en: ["In Bread Bowl", "Signature"]
+      de: ["Wochenend-Menü", "Sa 15.08."],
+      pl: ["Menu weekendowe", "Sb 15.08"],
+      en: ["Weekend Menu", "Sat 15.08"]
     }
   },
   {
     id: "ob_6",
     category: MenuCategory.OBIADY,
-    priceEur: 9.50,
-    pricePln: 41.00,
+    priceEur: 16.90,
+    pricePln: 72.70,
     imageUrl: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Ofenkartoffel mit Hähnchen / Ziemniak Pieczony",
-      pl: "Ziemniak Pieczony z kurczakiem",
-      en: "Jacket Baked Potato with Chicken"
+      de: "Hähnchenbrust mit Kroketten",
+      pl: "Pierś z kurczaka z krokietami",
+      en: "Chicken breast with croquettes"
     },
     description: {
-      de: "Große, im Ofen gebackene Ofenkartoffel mit würziger weißer Schnittlauchkruste, üppig gefüllt mit saftig gegrilltem Hähnchenbrustfilet, süßem Mais und aromatischer Knoblauchsauce.",
-      pl: "Duży, puszysty ziemniak pieczony z chrupiącą skórką, faszerowany kawałkami aromatycznego grillowanego kurczaka, słodką kukurydzą oraz wybitnym domowym sosem czosnkowym.",
-      en: "Jumbo jacket baked potato with a crispy skin, stuffed with delicious grilled chicken breast pieces, sweet golden corn, and generously drizzled with our signature house garlic sauce."
+      de: "Gegrillte Hähnchenbrust mit knusprigen Kroketten und frischem Salat. Inklusive hausgemachter Hühnersuppe. Sonntag, 16.08.",
+      pl: "Grillowana pierś z kurczaka z chrupiącymi krokietami i świeżą sałatką. W cenie domowy rosół. Niedziela 16.08.",
+      en: "Grilled chicken breast with crispy croquettes and fresh salad. Chicken soup included. Sunday 16.08."
     },
     tags: {
-      de: ["Leicht", "Mit Knoblauchsauce"],
-      pl: ["Z pieca", "Lekkie i pożywne"],
-      en: ["Baked", "With Garlic Sauce"]
+      de: ["Mit Rosół", "So 16.08."],
+      pl: ["Z rosołem", "Nd 16.08"],
+      en: ["With Rosół", "Sun 16.08"]
     }
   },
   {
     id: "ob_7",
     category: MenuCategory.OBIADY,
-    priceEur: 8.50,
-    pricePln: 36.50,
-    imageUrl: "https://images.unsplash.com/photo-1547592165-e1d17fed6006?q=80&w=600&auto=format&fit=crop",
+    priceEur: 6.90,
+    pricePln: 29.70,
+    imageUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=600&auto=format&fit=crop",
     name: {
-      de: "Sauerkrautsuppe / Domowy Kapuśniak",
-      pl: "Domowy Kapuśniak na wędzonych żeberkach",
-      en: "Hearty Sauerkraut Soup (Kapuśniak)"
+      de: "Kartoffelsuppe",
+      pl: "Zupa ziemniaczana",
+      en: "Potato soup"
     },
     description: {
-      de: "Deftige Suppe aus traditionellem Sauerkraut, langsam auf geräucherten Rippchen gekocht, verfeinert mit geräuchertem Speck,Majoran und Gemüseeinlage. Sehr wärmend!",
-      pl: "Rozgrzewająca, domowa zupa z kiszonej kapusty gotowana na aromatycznych wędzonych żeberkach, z boczkiem, ziemniaczkami i majerankiem.",
-      en: "Deeply flavorful, warming cabbage soup brewed on smoked pork ribs with high-quality sauerkraut, bacon bits, potatoes, and local herbs."
+      de: "Cremige Kartoffelsuppe nach Hausrezept, fein abgeschmeckt und mit frischen Kräutern serviert. Samstag, 22.08.",
+      pl: "Kremowa zupa ziemniaczana według domowego przepisu, doprawiona i podana ze świeżymi ziołami. Sobota 22.08.",
+      en: "Creamy potato soup from our house recipe, finely seasoned and served with fresh herbs. Saturday 22.08."
     },
     tags: {
-      de: ["Wärmend", "Herzhaft"],
-      pl: ["Rozgrzewające", "Tradycja"],
-      en: ["Comfort Food", "Warming"]
+      de: ["Suppe", "Sa 22.08."],
+      pl: ["Zupa", "Sb 22.08"],
+      en: ["Soup", "Sat 22.08"]
+    }
+  },
+  {
+    id: "ob_8",
+    category: MenuCategory.OBIADY,
+    priceEur: 17.90,
+    pricePln: 77.00,
+    imageUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=600&auto=format&fit=crop",
+    name: {
+      de: "Schweinenacken mit Schlesischen Klößen",
+      pl: "Karkówka ze śląskimi kluskami",
+      en: "Pork neck with Silesian dumplings"
+    },
+    description: {
+      de: "Saftiger Schweinenacken mit Schlesischen Klößen und Rotkohl. Inklusive hausgemachter Hühnersuppe. Sonntag, 23.08.",
+      pl: "Soczysta karkówka ze śląskimi kluskami i czerwoną kapustą. W cenie domowy rosół. Niedziela 23.08.",
+      en: "Juicy pork neck with Silesian dumplings and red cabbage. Chicken soup included. Sunday 23.08."
+    },
+    tags: {
+      de: ["Mit Rosół", "So 23.08."],
+      pl: ["Z rosołem", "Nd 23.08"],
+      en: ["With Rosół", "Sun 23.08"]
+    }
+  },
+  {
+    id: "ob_9",
+    category: MenuCategory.OBIADY,
+    priceEur: 14.90,
+    pricePln: 64.10,
+    imageUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=600&auto=format&fit=crop",
+    name: {
+      de: "Rindergulasch mit Reis",
+      pl: "Gulasz wołowy z ryżem",
+      en: "Beef goulash with rice"
+    },
+    description: {
+      de: "Langsam geschmortes Rindergulasch mit Reis — kräftig gewürzt und wunderbar zart. Samstag, 29.08.",
+      pl: "Wolno duszony gulasz wołowy z ryżem — mocno przyprawiony i wyjątkowo delikatny. Sobota 29.08.",
+      en: "Slow-braised beef goulash with rice — richly spiced and beautifully tender. Saturday 29.08."
+    },
+    tags: {
+      de: ["Wochenend-Menü", "Sa 29.08."],
+      pl: ["Menu weekendowe", "Sb 29.08"],
+      en: ["Weekend Menu", "Sat 29.08"]
+    }
+  },
+  {
+    id: "ob_10",
+    category: MenuCategory.OBIADY,
+    priceEur: 18.90,
+    pricePln: 81.30,
+    imageUrl: "https://images.unsplash.com/photo-1626700051175-6518c4793f0f?q=80&w=600&auto=format&fit=crop",
+    name: {
+      de: "Bauernschnitzel mit Bratkartoffeln",
+      pl: "Kotlet po chłopsku z pieczonymi ziemniakami",
+      en: "Farmer's schnitzel with fried potatoes"
+    },
+    description: {
+      de: "Bauernschnitzel mit Speck, Spiegelei und knusprigen Bratkartoffeln. Inklusive hausgemachter Hühnersuppe. Sonntag, 30.08.",
+      pl: "Kotlet po chłopsku z boczkiem, jajkiem sadzonym i chrupiącymi ziemniakami. W cenie domowy rosół. Niedziela 30.08.",
+      en: "Farmer's schnitzel with bacon, fried egg and crispy fried potatoes. Chicken soup included. Sunday 30.08."
+    },
+    tags: {
+      de: ["Mit Rosół", "So 30.08."],
+      pl: ["Z rosołem", "Nd 30.08"],
+      en: ["With Rosół", "Sun 30.08"]
     }
   },
 
@@ -586,7 +631,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f1",
       date: "Heute, 09:30",
-      content: "Guten Morgen Goch! ☀️ Die Sonne scheint auf der Frauenstraße und unsere Vitrine füllt sich mit Leckereien! Heute frisch vorbereitet: unser weißer Schokoladen-Himbeer-Käsekuchen 🍓 auf knusprigem Spekulatiusboden und saftiger veganer Karottenkuchen mit knackigen Nüssen. Dazu empfehlen wir frisch gebrühten Filterkaffee aus Äthiopien über V60. Genießen Sie die Sonne in unserem Kaffeegarten ab 10:00 Uhr! Wir freuen uns auf Sie!",
+      content: "Guten Morgen Goch! ☀️ Die Sonne scheint am Markt und unsere Vitrine füllt sich mit Leckereien! Heute frisch vorbereitet: unser weißer Schokoladen-Himbeer-Käsekuchen 🍓 auf knusprigem Spekulatiusboden und saftiger veganer Karottenkuchen mit knackigen Nüssen. Dazu empfehlen wir frisch gebrühten Filterkaffee aus Äthiopien über V60. Genießen Sie die Sonne in unserem Kaffeegarten ab 10:00 Uhr! Wir freuen uns auf Sie!",
       category: "Kuchen & Torten",
       imgUrl: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -613,7 +658,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f4",
       date: "Vor 5 Tagen",
-      content: "Da ist er! Unser neuer Favorit für warme Nachmittage – Espresso Tonic mit geflämmtem Rosmarinzweig! 🌿 Verbindet die feine Bitternote feinsten Tonics mit der fruchtigen Säure eines doppelten Espresso-Shots und dem herrlich aromatischen Aroma von frischem Rosmarin. Genießen Sie den Sommer in unserem traumhaften, versteckten Innenhof auf der Frauenstraße.",
+      content: "Da ist er! Unser neuer Favorit für warme Nachmittage – Espresso Tonic mit geflämmtem Rosmarinzweig! 🌿 Verbindet die feine Bitternote feinsten Tonics mit der fruchtigen Säure eines doppelten Espresso-Shots und dem herrlich aromatischen Aroma von frischem Rosmarin. Genießen Sie den Sommer in unserem traumhaften, versteckten Innenhof am Markt.",
       category: "Erfrischungsgetränke",
       imgUrl: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -642,7 +687,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f1",
       date: "Dziś, 09:30",
-      content: "Dzień dobry Goch! ☀️ Słońce świeci na Frauenstraße, a nasza witryna wypełnia się pysznościami! Dziś przygotowaliśmy dla Was nasz flagowy Sernik z Białą Czekoladą i Malinami 🍓 na spodzie korzennym oraz wegańskie ciasto marchewkowe z chrupiącymi orzechami. Do tego polecamy świeżo wypaloną kawę z Etiopii parzoną w drip-ie. Zapraszamy do stolików w ogrodzie od 10:00! Do zobaczenia!",
+      content: "Dzień dobry Goch! ☀️ Słońce świeci przy rynku w Goch, a nasza witryna wypełnia się pysznościami! Dziś przygotowaliśmy dla Was nasz flagowy Sernik z Białą Czekoladą i Malinami 🍓 na spodzie korzennym oraz wegańskie ciasto marchewkowe z chrupiącymi orzechami. Do tego polecamy świeżo wypaloną kawę z Etiopii parzoną w drip-ie. Zapraszamy do stolików w ogrodzie od 10:00! Do zobaczenia!",
       category: "Ciastka",
       imgUrl: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -669,7 +714,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f4",
       date: "5 dni temu",
-      content: "Mamy to! Nowy orzeźwiający faworyt na ciepłe czerwcowe popołudnia – Espresso Tonic z Gałązką Rozmarynu! 🌿 Łączy kwaskowatość podwójnego espressa, musujący tonik premium oraz niesamowity dymny posmak, który uzyskujemy muskając gałązkę rozmarynu ogniem baristycznym. Idealny napój w naszym ukrytym podwórku na Frauenstraße.",
+      content: "Mamy to! Nowy orzeźwiający faworyt na ciepłe czerwcowe popołudnia – Espresso Tonic z Gałązką Rozmarynu! 🌿 Łączy kwaskowatość podwójnego espressa, musujący tonik premium oraz niesamowity dymny posmak, który uzyskujemy muskając gałązkę rozmarynu ogniem baristycznym. Idealny napój w naszym ukrytym podwórku przy rynku w Goch.",
       category: "Napoje",
       imgUrl: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -687,7 +732,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_event_pl2",
       date: "Niedziela, 11:00",
-      content: "Uwaga smakosze! 🧇 Zapowiada się słodka niedziela! #Event: Wielki Rzemieślniczy Festiwal Gofra w Café Martens! Serwujemy chrupiące, ciepłe gofry z bitą śmietaną, gałką lodów i pyszną gorącą konfiturą ze świeżych owoców z Niederrhein. Przyjdź spędzić czas w urokliwym podwórku na Frauenstraße. #Event",
+      content: "Uwaga smakosze! 🧇 Zapowiada się słodka niedziela! #Event: Wielki Rzemieślniczy Festiwal Gofra w Café Martens! Serwujemy chrupiące, ciepłe gofry z bitą śmietaną, gałką lodów i pyszną gorącą konfiturą ze świeżych owoców z Niederrhein. Przyjdź spędzić czas w urokliwym podwórku przy rynku w Goch. #Event",
       category: "Promocje",
       imgUrl: "https://images.unsplash.com/photo-1562967914-1f1981bb2bb6?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -698,7 +743,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f1",
       date: "Today, 09:30",
-      content: "Good morning Goch! ☀️ The sun is shining beautifully on Frauenstraße, and our display is loaded with pastries! Today we baked our signature White Chocolate & Raspberry Cheesecake 🍓 on a spiced cookie crust, alongside our moist vegan carrot cake with walnuts. Pair it up with Ethiopia single origin pour-over drip coffee. Outdoor seating opens at 10:00! See you soon!",
+      content: "Good morning Goch! ☀️ The sun is shining beautifully on the market square, and our display is loaded with pastries! Today we baked our signature White Chocolate & Raspberry Cheesecake 🍓 on a spiced cookie crust, alongside our moist vegan carrot cake with walnuts. Pair it up with Ethiopia single origin pour-over drip coffee. Outdoor seating opens at 10:00! See you soon!",
       category: "Cakes & Sweets",
       imgUrl: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -725,7 +770,7 @@ const LOCALIZED_FALLBACK_POSTS: Record<string, FacebookPost[]> = {
     {
       id: "fb_f4",
       date: "5 days ago",
-      content: "Here it is! An absolute summer hit for warm afternoons – Espresso Tonic with a flame-scorched Rosemary Sprig! 🌿 Merrily blending the deep botanical bitterness of premium tonic, double ristretto acidity, and an incredible aromatic finish. The absolute best drink to cool off in our cozy backyard on Frauenstraße.",
+      content: "Here it is! An absolute summer hit for warm afternoons – Espresso Tonic with a flame-scorched Rosemary Sprig! 🌿 Merrily blending the deep botanical bitterness of premium tonic, double ristretto acidity, and an incredible aromatic finish. The absolute best drink to cool off in our cozy backyard on the market square.",
       category: "Drinks",
       imgUrl: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=600&auto=format&fit=crop",
       facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
@@ -934,182 +979,225 @@ app.get("/api/fb-posts", (req, res) => {
   });
 });
 
-// 3. Trigger active sync to crawl Facebook posts via Gemini Grounding Search
-app.post("/api/sync-facebook-posts", async (req, res) => {
-  const lang = (req.query.lang as string) || "de";
-  const gemini = getGemini();
+// ----------------------------------------------------------------------
+// 3. Sync posts from the café's Facebook Page.
+//
+// Real data requires a Facebook Page Access Token. Set FB_PAGE_ID and
+// FB_PAGE_ACCESS_TOKEN in the environment and this endpoint reads the actual
+// page feed through the Graph API.
+//
+// Without a token we serve the local demo posts and label them honestly
+// (isRealSync: false). We never present invented content as a real Facebook
+// update — the previous implementation asked Gemini to make posts up, which is
+// why the gallery never showed genuine news or events.
+// ----------------------------------------------------------------------
 
-  const langNames: Record<string, string> = {
-    de: "German",
-    pl: "Polish",
-    en: "English"
-  };
-  const currentLangName = langNames[lang] || "German";
+const FB_PAGE_ID = process.env.FB_PAGE_ID || "61584459111985";
+const FB_PAGE_URL = `https://www.facebook.com/profile.php?id=${FB_PAGE_ID}`;
+const FB_GRAPH_VERSION = "v21.0";
 
-  const localSyncMessage: Record<string, string> = {
-    de: "Lokal synchronisiert aus dem Facebook-Cache (Kein Gemini API-Schlüssel eingegeben)",
-    pl: "Zsynchronizowano lokalnie z pamiecią podręczną Facebook (Brak skonfigurowanego klucza API Gemini)",
-    en: "Synchronized locally from Facebook cache (No Gemini API key supplied)"
-  };
+interface GraphPost {
+  id: string;
+  message?: string;
+  created_time?: string;
+  permalink_url?: string;
+  full_picture?: string;
+}
 
-  const localSyncStatusText: Record<string, string> = {
-    de: `Lokal aktualisiert um ${new Date().toLocaleTimeString("de-DE")}`,
-    pl: `Zsynchronizowano lokalnie o ${new Date().toLocaleTimeString("pl-PL")}`,
-    en: `Synchronized locally at ${new Date().toLocaleTimeString("en-US")}`
-  };
-
-  const syncCompleteMessage: Record<string, string> = {
-    de: "Automatisch synchronisiert und aktualisiert mit Facebook-Beiträgen!",
-    pl: "Automatycznie pobrano i uaktualniono najnowsze posty z profilu Facebook!",
-    en: "AI sync complete! Latest Facebook page updates retrieved."
-  };
-
-  const syncStatusText: Record<string, string> = {
-    de: `Kollaborativ synchronisiert mit KI um ${new Date().toLocaleTimeString("de-DE")}`,
-    pl: `Zsynchronizowano za pomocą AI o ${new Date().toLocaleTimeString("pl-PL")}`,
-    en: `Synchronized with Gemini AI at ${new Date().toLocaleTimeString("en-US")}`
-  };
-
-  const backupStatusText: Record<string, string> = {
-    de: `Synchronisiert um ${new Date().toLocaleTimeString("de-DE")} (Backup-Daten verwendet)`,
-    pl: `Zsynchronizowano o ${new Date().toLocaleTimeString("pl-PL")} (Użyto bazy awaryjnej)`,
-    en: `Synchronized at ${new Date().toLocaleTimeString("en-US")} (Using fallback data)`
-  };
-
-  const backupMessage: Record<string, string> = {
-    de: "Galerie mit Facebook-Beiträgen erfolgreich aktualisiert.",
-    pl: "Uaktualniono galerię zsynchronizowaną ze stroną Facebook. (Wizyta na stronie udana!)",
-    en: "Gallery successfully refreshed with baseline Facebook postings."
-  };
-
-  if (!gemini) {
-    console.log(`No Gemini API key supplied or placeholder found. Returning fallback posts with randomized timings for language: ${lang}`);
-    // Simulate minor synchronisation update by randomizing post dates or order to show user interaction
-    const baseline = LOCALIZED_FALLBACK_POSTS[lang] || LOCALIZED_FALLBACK_POSTS["de"];
-    const randomized = baseline.map(post => {
-      const now = new Date();
-      return {
-        ...post,
-        date: lang === "de" ? `Heute, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} Uhr` : 
-              lang === "pl" ? `Dzisiaj, godz. ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}` :
-              `Today, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
-        isRealSync: true
-      };
-    });
-    CURRENT_POSTS_CACHE_MAPPING[lang] = randomized;
-    LAST_SYNC_TIME_MAPPING[lang] = localSyncStatusText[lang] || localSyncStatusText["de"];
-
-    return res.json({
-      success: true,
-      data: randomized,
-      lastSyncTime: LAST_SYNC_TIME_MAPPING[lang],
-      method: "local-simulation",
-      message: localSyncMessage[lang] || localSyncMessage["de"]
-    });
+/**
+ * Reads the page feed. Returns null when no access token is configured,
+ * so the caller can distinguish "not set up" from "set up but empty".
+ */
+async function fetchFacebookPage(limit = 8): Promise<GraphPost[] | null> {
+  const token = process.env.FB_PAGE_ACCESS_TOKEN;
+  if (!token || token === "MY_FB_PAGE_ACCESS_TOKEN") {
+    return null;
   }
 
-  try {
-    console.log(`Querying Gemini 3.5-flash with Google Search grounding to retrieve current Cafe Martens & More details in ${currentLangName}...`);
+  const fields = "id,message,created_time,permalink_url,full_picture";
+  const url =
+    `https://graph.facebook.com/${FB_GRAPH_VERSION}/${encodeURIComponent(FB_PAGE_ID)}/posts` +
+    `?fields=${fields}&limit=${limit}&access_token=${encodeURIComponent(token)}`;
 
-    const prompt = `You are an AI data compiler for the cafe website of "Café Martens & More" located at Frauenstraße 16 (or Frauenstr. 10/16) in Goch, Germany.
-We need you to perform Google Search grounding to search for recent Facebook updates, specials, breakfast, lunch, or cake/coffee promotions posted on their official Facebook page: https://www.facebook.com/profile.php?id=61584459111985.
+  const resp = await fetch(url);
+  const json: any = await resp.json().catch(() => ({}));
 
-Perform a real web search to see if they have uploaded posts about:
-- breakfast options ("Frühstück")
-- cakes ("Kuchen")
-- food of the day/weekly card ("Tageskarte", "Maultaschen", "Waffeln", etc.)
-- coffee / drinks.
+  if (!resp.ok || json?.error) {
+    const detail = json?.error?.message || `HTTP ${resp.status}`;
+    throw new Error(`Facebook Graph API rejected the request: ${detail}`);
+  }
 
-Translate what you find or write realistic postings strictly into beautiful, authentic ${currentLangName}. If search results don't yield full text posts of recent days, generate highly realistic, brand-specific posts based on their real brand identity, location (Goch, Frauenstraße), opening hours, and actual food items seen in reviews (e.g. delicious waffles, cake platters, breakfast specialty coffee).
+  return Array.isArray(json?.data) ? (json.data as GraphPost[]) : [];
+}
 
-Format the output strictly as a JSON array of 5 posts.
-At least 1 or 2 of these generated posts MUST represent special upcoming activities (like candlelit concerts, cooking workshops, holiday waffle events, or outdoor parties) and MUST explicitly include the hashtag '#Event' in their content text.
+/** Very small heuristic so posts still land in a readable category chip. */
+function categorizePost(text: string, lang: string): string {
+  const t = text.toLowerCase();
+  const pick = (de: string, pl: string, en: string) =>
+    lang === "pl" ? pl : lang === "en" ? en : de;
 
-Each post in the JSON MUST have exactly these keys:
-- "id": unique string (e.g. "fb_sync_1", "fb_sync_2", "fb_sync_3", "fb_sync_4", "fb_sync_5")
-- "date": string describing when it was posted in ${currentLangName} (e.g. "Heute, 10:15", "Wczoraj, 14:00", "Yesterday, 2 PM", "Before 3 days")
-- "content": the text translation/summary in ${currentLangName} (around 2-4 sentences, styled with elegant, warm social media tone, including small emojis, and including '#Event' for event posts)
-- "category": a classification string in the requested ${currentLangName} (like "Frühstück", "Mittagessen", "Kuchen & Torten", "Kaffeespezialitäten", "Erfrischungsgetränke", "Wydarzenia" as appropriate)
-- "imgUrl": a highly aesthetic stock photography URL from Unsplash reflecting exactly the item mentioned (e.g. if a waffle is mentioned, use a gorgeous waffle photo; if acoustic music, use a guitar/stage candlelit scene; if goulash, use that).
-- "facebookUrl": "https://www.facebook.com/profile.php?id=61584459111985"
-- "isRealSync": true
+  if (/#event|konzert|koncert|concert|live|festival|festiwal/.test(t)) {
+    return pick("Events & Konzerte", "Wydarzenia i koncerty", "Events & Concerts");
+  }
+  if (/frühstück|fruhstuck|śniadan|sniadan|breakfast|buffet|bufet/.test(t)) {
+    return pick("Frühstück", "Śniadania", "Breakfast");
+  }
+  if (/kuchen|torte|ciast|sernik|cake|cheesecake/.test(t)) {
+    return pick("Kuchen & Torten", "Ciastka", "Cakes & Sweets");
+  }
+  if (/kaffee|kawa|coffee|espresso|cappuccino/.test(t)) {
+    return pick("Kaffeespezialitäten", "Kawy", "Coffee");
+  }
+  if (/menü|menu|mittag|obiad|schnitzel|suppe|zupa|lunch|catering/.test(t)) {
+    return pick("Speisekarte", "Menu", "Menu");
+  }
+  return pick("Neuigkeiten", "Aktualności", "Updates");
+}
 
-Format response strictly as valid, parsable JSON array. Do not wrap it in markdown code blocks like \`\`\`json. Output ONLY the JSON array.`;
+function formatPostDate(iso: string | undefined, lang: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const locale = lang === "pl" ? "pl-PL" : lang === "en" ? "en-GB" : "de-DE";
+  return d.toLocaleString(locale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
-    const response = await gemini.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        temperature: 0.7,
-      },
-    });
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=600&auto=format&fit=crop";
 
-    const responseText = response.text || "";
-    console.log("Raw Gemini Response received:", responseText);
+app.post("/api/sync-facebook-posts", async (req, res) => {
+  const lang = (req.query.lang as string) || "de";
+  const timeOf = (l: string) =>
+    new Date().toLocaleTimeString(l === "pl" ? "pl-PL" : l === "en" ? "en-US" : "de-DE");
 
-    // Clean markdown blocks if any returned despite of prompt rule
-    let cleanJson = responseText.trim();
-    if (cleanJson.startsWith("```")) {
-      cleanJson = cleanJson.replace(/^```(json)?/, "").replace(/```$/, "").trim();
-    }
+  const notConfiguredMessage: Record<string, string> = {
+    de: "Facebook ist noch nicht verbunden. Hinterlegen Sie FB_PAGE_ACCESS_TOKEN, damit echte Beiträge geladen werden — bis dahin sehen Sie Beispielinhalte.",
+    pl: "Facebook nie jest jeszcze podłączony. Ustaw FB_PAGE_ACCESS_TOKEN, aby wczytywać prawdziwe posty — na razie widzisz treści przykładowe.",
+    en: "Facebook is not connected yet. Set FB_PAGE_ACCESS_TOKEN to load genuine posts — until then you are seeing sample content."
+  };
 
-    const parsedPosts = JSON.parse(cleanJson);
-    if (Array.isArray(parsedPosts) && parsedPosts.length > 0) {
-      CURRENT_POSTS_CACHE_MAPPING[lang] = parsedPosts.map((p, index) => ({
-        ...p,
-        id: p.id || `fb_real_${Date.now()}_${index}`,
-        facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
-        isRealSync: true
-      }));
-      LAST_SYNC_TIME_MAPPING[lang] = syncStatusText[lang] || syncStatusText["de"];
-      
-      return res.json({
-        success: true,
-        data: CURRENT_POSTS_CACHE_MAPPING[lang],
-        lastSyncTime: LAST_SYNC_TIME_MAPPING[lang],
-        method: "gemini-ai-grounded",
-        message: syncCompleteMessage[lang] || syncCompleteMessage["de"]
-      });
-    } else {
-      throw new Error("Parsed data was not an array or was empty.");
-    }
+  const notConfiguredStatus: Record<string, string> = {
+    de: `Beispieldaten geladen um ${timeOf("de")} (Facebook nicht verbunden)`,
+    pl: `Załadowano dane przykładowe o ${timeOf("pl")} (Facebook niepodłączony)`,
+    en: `Sample data loaded at ${timeOf("en")} (Facebook not connected)`
+  };
 
-  } catch (error: any) {
-    const errorStr = String(error) + (error?.stack || "") + JSON.stringify(error || {});
-    const isQuotaError = errorStr.includes("RESOURCE_EXHAUSTED") || 
-                         errorStr.includes("429") || 
-                         errorStr.toLowerCase().includes("quota");
+  const successMessage: Record<string, string> = {
+    de: "Aktuelle Beiträge direkt von unserer Facebook-Seite geladen.",
+    pl: "Pobrano aktualne posty bezpośrednio z naszej strony na Facebooku.",
+    en: "Latest posts loaded straight from our Facebook page."
+  };
 
-    if (isQuotaError) {
-      console.warn("[Gemini Resource Warning] API key rate-limited or quota exhausted. Falling back to robust local offline posts gracefully.");
-    } else {
-      console.error("Failed to fetch/parse Facebook posts via search grounding:", error);
-    }
+  const successStatus: Record<string, string> = {
+    de: `Mit Facebook synchronisiert um ${timeOf("de")}`,
+    pl: `Zsynchronizowano z Facebookiem o ${timeOf("pl")}`,
+    en: `Synchronized with Facebook at ${timeOf("en")}`
+  };
 
-    // Graceful fallback to refreshed cached fallback data
+  const emptyMessage: Record<string, string> = {
+    de: "Verbindung erfolgreich — die Facebook-Seite enthält derzeit keine Textbeiträge.",
+    pl: "Połączenie udane — strona na Facebooku nie zawiera obecnie postów tekstowych.",
+    en: "Connection succeeded — the Facebook page currently has no text posts."
+  };
+
+  const errorMessage: Record<string, string> = {
+    de: "Facebook konnte nicht erreicht werden. Es werden zwischengespeicherte Beispielinhalte angezeigt.",
+    pl: "Nie udało się połączyć z Facebookiem. Wyświetlane są zapisane treści przykładowe.",
+    en: "Facebook could not be reached. Showing cached sample content instead."
+  };
+
+  const errorStatus: Record<string, string> = {
+    de: `Synchronisierung fehlgeschlagen um ${timeOf("de")}`,
+    pl: `Synchronizacja nie powiodła się o ${timeOf("pl")}`,
+    en: `Synchronization failed at ${timeOf("en")}`
+  };
+
+  /** Demo posts, clearly marked as not being a real sync. */
+  const serveDemo = (
+    status: string,
+    message: string,
+    method: string,
+    extra: Record<string, unknown> = {}
+  ) => {
     const baseline = LOCALIZED_FALLBACK_POSTS[lang] || LOCALIZED_FALLBACK_POSTS["de"];
-    const randomized = baseline.map(post => {
-      const now = new Date();
-      return {
-        ...post,
-        date: lang === "de" ? `Heute, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} Uhr` : 
-              lang === "pl" ? `Dzisiaj, godz. ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}` :
-              `Today, ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
-        isRealSync: true
-      };
-    });
-    CURRENT_POSTS_CACHE_MAPPING[lang] = randomized;
-    LAST_SYNC_TIME_MAPPING[lang] = backupStatusText[lang] || backupStatusText["de"];
-    
+    const demo = baseline.map(post => ({ ...post, isRealSync: false }));
+    CURRENT_POSTS_CACHE_MAPPING[lang] = demo;
+    LAST_SYNC_TIME_MAPPING[lang] = status;
     return res.json({
       success: true,
-      data: randomized,
-      lastSyncTime: LAST_SYNC_TIME_MAPPING[lang],
-      method: "graceful-fallback",
-      isQuotaExceeded: isQuotaError,
-      message: backupMessage[lang] || backupMessage["de"]
+      data: demo,
+      lastSyncTime: status,
+      method,
+      isDemoContent: true,
+      message,
+      ...extra
     });
+  };
+
+  try {
+    const graphPosts = await fetchFacebookPage();
+
+    // No token configured — say so plainly instead of inventing posts.
+    if (graphPosts === null) {
+      console.log("[Facebook] No FB_PAGE_ACCESS_TOKEN configured; serving demo content.");
+      return serveDemo(
+        notConfiguredStatus[lang] || notConfiguredStatus["de"],
+        notConfiguredMessage[lang] || notConfiguredMessage["de"],
+        "not-configured",
+        { configured: false }
+      );
+    }
+
+    const mapped: FacebookPost[] = graphPosts
+      .filter(p => p.message && p.message.trim().length > 0)
+      .map(p => ({
+        id: p.id,
+        date: formatPostDate(p.created_time, lang),
+        content: p.message!.trim(),
+        category: categorizePost(p.message!, lang),
+        imgUrl: p.full_picture || FALLBACK_IMG,
+        facebookUrl: p.permalink_url || FB_PAGE_URL,
+        isRealSync: true
+      }));
+
+    if (mapped.length === 0) {
+      console.log("[Facebook] Page reachable but returned no text posts.");
+      return serveDemo(
+        successStatus[lang] || successStatus["de"],
+        emptyMessage[lang] || emptyMessage["de"],
+        "facebook-graph-empty",
+        { configured: true }
+      );
+    }
+
+    CURRENT_POSTS_CACHE_MAPPING[lang] = mapped;
+    LAST_SYNC_TIME_MAPPING[lang] = successStatus[lang] || successStatus["de"];
+
+    console.log(`[Facebook] Synced ${mapped.length} real posts for language: ${lang}`);
+
+    return res.json({
+      success: true,
+      data: mapped,
+      lastSyncTime: LAST_SYNC_TIME_MAPPING[lang],
+      method: "facebook-graph",
+      configured: true,
+      message: successMessage[lang] || successMessage["de"]
+    });
+
+  } catch (error: any) {
+    console.error("[Facebook] Sync failed:", error?.message || error);
+    return serveDemo(
+      errorStatus[lang] || errorStatus["de"],
+      errorMessage[lang] || errorMessage["de"],
+      "sync-error",
+      { configured: true, error: String(error?.message || error) }
+    );
   }
 });
 
