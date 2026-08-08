@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Content edited through the admin panel (runtime state, not source).
+# Anchored to the repo root so it does not also swallow src/data.
+/data/

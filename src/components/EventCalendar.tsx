@@ -1,14 +1,36 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, ExternalLink, Clock, Sparkles, Soup } from "lucide-react";
 import { useTranslation } from "../i18n";
-import { CafeEvent, eventDate, getEventsForMonth, formatPrice } from "../data/events";
+import { CAFE_EVENTS, CafeEvent, eventDate, filterEventsForMonth, formatPrice } from "../data/events";
 
 /** Local "today" — no longer pinned to a hardcoded date. */
 const today = new Date();
 
-export default function EventCalendar() {
+interface EventCalendarProps {
+  /** Bumped by the admin panel so saved changes appear without a reload. */
+  refreshTrigger?: number;
+}
+
+export default function EventCalendar({ refreshTrigger = 0 }: EventCalendarProps) {
   const { language } = useTranslation();
+
+  // Events come from the server so admin edits show up live; the bundled
+  // August data is the fallback if the API is unreachable.
+  const [events, setEvents] = useState<CafeEvent[]>(CAFE_EVENTS);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/events")
+      .then(res => res.json())
+      .then(json => {
+        if (!cancelled && json?.success && Array.isArray(json.data)) {
+          setEvents(json.data);
+        }
+      })
+      .catch(err => console.error("Could not load calendar events, using bundled data:", err));
+    return () => { cancelled = true; };
+  }, [refreshTrigger]);
 
   // Calendar starts on the real current month.
   const [currentDate, setCurrentDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
@@ -96,7 +118,10 @@ export default function EventCalendar() {
   const currentDict = dict[language] || dict.de;
 
   // Real events for the month currently in view
-  const eventsInCurrentMonth = useMemo(() => getEventsForMonth(year, month), [year, month]);
+  const eventsInCurrentMonth = useMemo(
+    () => filterEventsForMonth(events, year, month),
+    [events, year, month]
+  );
 
   const getEventsForDay = (dayNum: number) =>
     eventsInCurrentMonth.filter(ev => eventDate(ev).getDate() === dayNum);

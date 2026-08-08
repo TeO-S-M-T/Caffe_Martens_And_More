@@ -1,8 +1,11 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { MenuCategory, MenuItem, FacebookPost } from "./src/types";
+import { CAFE_EVENTS, CafeEvent } from "./src/data/events";
 
 dotenv.config();
 
@@ -811,6 +814,176 @@ let LAST_SYNC_TIME_MAPPING: Record<string, string> = {
 };
 
 // ----------------------------------------------------------------------
+// Calendar events store (seeded from src/data/events.ts)
+// ----------------------------------------------------------------------
+let CALENDAR_EVENTS: CafeEvent[] = CAFE_EVENTS.map(ev => ({ ...ev }));
+
+// ----------------------------------------------------------------------
+// Persistence
+//
+// Everything the admin panel edits lived only in memory before, so every
+// restart silently threw the owner's changes away. We now mirror the three
+// mutable collections to a JSON file and reload them on boot.
+//
+// NOTE: on Cloud Run the container filesystem is ephemeral and not shared
+// between instances — edits survive a restart of the same instance but not a
+// new revision or a scale-out. For durable multi-instance storage this needs
+// a bucket or a database.
+// ----------------------------------------------------------------------
+const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), "data");
+const STORE_PATH = path.join(DATA_DIR, "store.json");
+
+function saveStore() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const payload = {
+      savedAt: new Date().toISOString(),
+      menu: LOCALIZED_MENU_ITEMS,
+      posts: CURRENT_POSTS_CACHE_MAPPING,
+      events: CALENDAR_EVENTS
+    };
+    fs.writeFileSync(STORE_PATH, JSON.stringify(payload, null, 2), "utf-8");
+  } catch (err: any) {
+    console.error("[Store] Could not persist changes:", err?.message || err);
+  }
+}
+
+function loadStore() {
+  try {
+    if (!fs.existsSync(STORE_PATH)) {
+      console.log("[Store] No saved store found — using built-in content.");
+      return;
+    }
+    const raw = JSON.parse(fs.readFileSync(STORE_PATH, "utf-8"));
+    if (Array.isArray(raw?.menu) && raw.menu.length > 0) {
+      LOCALIZED_MENU_ITEMS = raw.menu;
+    }
+    if (raw?.posts && typeof raw.posts === "object") {
+      CURRENT_POSTS_CACHE_MAPPING = { ...CURRENT_POSTS_CACHE_MAPPING, ...raw.posts };
+    }
+    if (Array.isArray(raw?.events)) {
+      CALENDAR_EVENTS = raw.events;
+    }
+    console.log(`[Store] Restored saved content from ${STORE_PATH} (saved ${raw?.savedAt || "unknown"}).`);
+  } catch (err: any) {
+    console.error("[Store] Could not read saved store, falling back to built-in content:", err?.message || err);
+  }
+}
+
+loadStore();
+
+// ----------------------------------------------------------------------
+// Admin authentication
+//
+// The password used to live in the client bundle and was printed on the login
+// screen, while the /api/admin/* routes accepted anything at all — the lock was
+// decoration. Authentication now happens here: the password never reaches the
+// browser, and every write requires a bearer token issued by /api/admin/login.
+// ----------------------------------------------------------------------
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
+
+/** token -> expiry timestamp */
+const adminSessions = new Map<string, number>();
+
+function issueToken(): string {
+  const token = crypto.randomBytes(32).toString("hex");
+  adminSessions.set(token, Date.now() + SESSION_TTL_MS);
+  return token;
+}
+
+function isValidToken(token: string | undefined): boolean {
+  if (!token) return false;
+  const expiry = adminSessions.get(token);
+  if (!expiry) return false;
+  if (Date.now() > expiry) {
+    adminSessions.delete(token);
+    return false;
+  }
+  return true;
+}
+
+/** Comparison that does not leak the answer through timing. */
+function passwordMatches(candidate: string): boolean {
+  const a = Buffer.from(String(candidate));
+  const b = Buffer.from(ADMIN_PASSWORD);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (!ADMIN_PASSWORD) {
+    return res.status(503).json({
+      success: false,
+      code: "not_configured",
+      message: "Admin access is disabled: ADMIN_PASSWORD is not set on the server."
+    });
+  }
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : undefined;
+  if (!isValidToken(token)) {
+    return res.status(401).json({
+      success: false,
+      code: "unauthorized",
+      message: "Not signed in, or the session has expired."
+    });
+  }
+  next();
+}
+
+// Simple per-IP throttle so the password cannot be brute forced quickly.
+const loginAttempts = new Map<string, { count: number; first: number }>();
+const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_ATTEMPTS = 8;
+
+app.post("/api/admin/login", (req, res) => {
+  if (!ADMIN_PASSWORD) {
+    return res.status(503).json({
+      success: false,
+      code: "not_configured",
+      message: "Admin access is disabled: ADMIN_PASSWORD is not set on the server."
+    });
+  }
+
+  const ip = req.ip || "unknown";
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (record && now - record.first < ATTEMPT_WINDOW_MS && record.count >= MAX_ATTEMPTS) {
+    return res.status(429).json({
+      success: false,
+      code: "rate_limited",
+      message: "Too many attempts. Please wait a few minutes and try again."
+    });
+  }
+
+  const { password } = req.body || {};
+  if (typeof password === "string" && passwordMatches(password)) {
+    loginAttempts.delete(ip);
+    return res.json({ success: true, token: issueToken(), expiresInMs: SESSION_TTL_MS });
+  }
+
+  if (!record || now - record.first >= ATTEMPT_WINDOW_MS) {
+    loginAttempts.set(ip, { count: 1, first: now });
+  } else {
+    record.count += 1;
+  }
+
+  return res.status(401).json({ success: false, code: "invalid_password" });
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  adminSessions.delete(token);
+  res.json({ success: true });
+});
+
+/** Lets the panel show a useful message before anyone types a password. */
+app.get("/api/admin/status", (req, res) => {
+  res.json({ success: true, configured: Boolean(ADMIN_PASSWORD) });
+});
+
+// ----------------------------------------------------------------------
 // API Routes
 // ----------------------------------------------------------------------
 
@@ -825,14 +998,14 @@ app.get("/api/menu", (req, res) => {
 });
 
 // Admin endpoints for Menu Items management
-app.get("/api/admin/menu", (req, res) => {
+app.get("/api/admin/menu", requireAdmin, (req, res) => {
   res.json({
     success: true,
     data: LOCALIZED_MENU_ITEMS
   });
 });
 
-app.post("/api/admin/menu", (req, res) => {
+app.post("/api/admin/menu", requireAdmin, (req, res) => {
   const { id, category, priceEur, imageUrl, name, description, tags } = req.body;
   const newItem = {
     id: id || `item_${Date.now()}`,
@@ -846,10 +1019,11 @@ app.post("/api/admin/menu", (req, res) => {
   };
   
   LOCALIZED_MENU_ITEMS.push(newItem);
+  saveStore();
   res.json({ success: true, data: newItem });
 });
 
-app.put("/api/admin/menu/:id", (req, res) => {
+app.put("/api/admin/menu/:id", requireAdmin, (req, res) => {
   const { id } = req.params;
   const { category, priceEur, imageUrl, name, description, tags } = req.body;
   const idx = LOCALIZED_MENU_ITEMS.findIndex(item => item.id === id);
@@ -865,27 +1039,29 @@ app.put("/api/admin/menu/:id", (req, res) => {
       description: description || LOCALIZED_MENU_ITEMS[idx].description,
       tags: tags || LOCALIZED_MENU_ITEMS[idx].tags
     };
+    saveStore();
     res.json({ success: true, data: LOCALIZED_MENU_ITEMS[idx] });
   } else {
     res.status(404).json({ success: false, message: "Item not found" });
   }
 });
 
-app.delete("/api/admin/menu/:id", (req, res) => {
+app.delete("/api/admin/menu/:id", requireAdmin, (req, res) => {
   const { id } = req.params;
   LOCALIZED_MENU_ITEMS = LOCALIZED_MENU_ITEMS.filter(item => item.id !== id);
+  saveStore();
   res.json({ success: true });
 });
 
 // Admin endpoints for Event/Post management
-app.get("/api/admin/posts", (req, res) => {
+app.get("/api/admin/posts", requireAdmin, (req, res) => {
   res.json({
     success: true,
     data: CURRENT_POSTS_CACHE_MAPPING
   });
 });
 
-app.post("/api/admin/posts", (req, res) => {
+app.post("/api/admin/posts", requireAdmin, (req, res) => {
   const { id, date, content, category, imgUrl, facebookUrl } = req.body;
   const newPostId = id || `post_${Date.now()}`;
   
@@ -929,10 +1105,11 @@ app.post("/api/admin/posts", (req, res) => {
   CURRENT_POSTS_CACHE_MAPPING.pl.unshift(plPost);
   CURRENT_POSTS_CACHE_MAPPING.en.unshift(enPost);
 
+  saveStore();
   res.json({ success: true, data: { de: dePost, pl: plPost, en: enPost } });
 });
 
-app.put("/api/admin/posts/:id", (req, res) => {
+app.put("/api/admin/posts/:id", requireAdmin, (req, res) => {
   const { id } = req.params;
   const { date, content, category, imgUrl, facebookUrl } = req.body;
 
@@ -956,15 +1133,112 @@ app.put("/api/admin/posts/:id", (req, res) => {
     }
   }
 
+  saveStore();
   res.json({ success: true });
 });
 
-app.delete("/api/admin/posts/:id", (req, res) => {
+app.delete("/api/admin/posts/:id", requireAdmin, (req, res) => {
   const { id } = req.params;
   for (const lang of ["de", "pl", "en"] as const) {
     CURRENT_POSTS_CACHE_MAPPING[lang] = (CURRENT_POSTS_CACHE_MAPPING[lang] || []).filter(p => p.id !== id);
   }
+  saveStore();
   res.json({ success: true });
+});
+
+// ----------------------------------------------------------------------
+// Calendar events — public read, admin write
+// ----------------------------------------------------------------------
+
+/** Normalises a submitted event so a partial form never corrupts the store. */
+function normalizeEvent(body: any, existing?: CafeEvent): CafeEvent {
+  const trio = (value: any, fallback: Record<string, string> | undefined, dflt = "") => ({
+    de: value?.de ?? fallback?.de ?? dflt,
+    pl: value?.pl ?? fallback?.pl ?? dflt,
+    en: value?.en ?? fallback?.en ?? dflt
+  });
+
+  const priceRaw = body.priceEur;
+  const hasPrice = priceRaw !== undefined && priceRaw !== null && priceRaw !== "";
+
+  const event: CafeEvent = {
+    id: body.id || existing?.id || `ev_${Date.now()}`,
+    date: body.date || existing?.date || new Date().toISOString().slice(0, 10),
+    kind: body.kind || existing?.kind || "weekend-menu",
+    imgUrl: body.imgUrl || existing?.imgUrl || "",
+    facebookUrl: body.facebookUrl || existing?.facebookUrl || "https://www.facebook.com/profile.php?id=61584459111985",
+    title: trio(body.title, existing?.title),
+    description: trio(body.description, existing?.description),
+    category: trio(body.category, existing?.category, "Wochenend-Menü")
+  };
+
+  if (hasPrice) {
+    event.priceEur = Number(priceRaw);
+  } else if (existing?.priceEur !== undefined && body.priceEur === undefined) {
+    event.priceEur = existing.priceEur;
+  }
+
+  // An empty starter in any language means "no starter for this event".
+  const starter = body.starter !== undefined ? body.starter : existing?.starter;
+  if (starter && (starter.de || starter.pl || starter.en)) {
+    event.starter = trio(starter, existing?.starter);
+  }
+
+  return event;
+}
+
+/** Public: the calendar reads from here. */
+app.get("/api/events", (req, res) => {
+  const sorted = [...CALENDAR_EVENTS].sort((a, b) => a.date.localeCompare(b.date));
+  res.json({ success: true, data: sorted });
+});
+
+app.get("/api/admin/events", requireAdmin, (req, res) => {
+  const sorted = [...CALENDAR_EVENTS].sort((a, b) => a.date.localeCompare(b.date));
+  res.json({ success: true, data: sorted });
+});
+
+app.post("/api/admin/events", requireAdmin, (req, res) => {
+  const event = normalizeEvent(req.body);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(event.date)) {
+    return res.status(400).json({ success: false, message: "Date must be in YYYY-MM-DD format." });
+  }
+  CALENDAR_EVENTS.push(event);
+  saveStore();
+  res.json({ success: true, data: event });
+});
+
+app.put("/api/admin/events/:id", requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const idx = CALENDAR_EVENTS.findIndex(ev => ev.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: "Event not found" });
+  }
+  const updated = normalizeEvent({ ...req.body, id }, CALENDAR_EVENTS[idx]);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(updated.date)) {
+    return res.status(400).json({ success: false, message: "Date must be in YYYY-MM-DD format." });
+  }
+  CALENDAR_EVENTS[idx] = updated;
+  saveStore();
+  res.json({ success: true, data: updated });
+});
+
+app.delete("/api/admin/events/:id", requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const before = CALENDAR_EVENTS.length;
+  CALENDAR_EVENTS = CALENDAR_EVENTS.filter(ev => ev.id !== id);
+  if (CALENDAR_EVENTS.length === before) {
+    return res.status(404).json({ success: false, message: "Event not found" });
+  }
+  saveStore();
+  res.json({ success: true });
+});
+
+/** Restores the built-in August menu if the owner clears things by accident. */
+app.post("/api/admin/events/reset", requireAdmin, (req, res) => {
+  CALENDAR_EVENTS = CAFE_EVENTS.map(ev => ({ ...ev }));
+  saveStore();
+  res.json({ success: true, data: CALENDAR_EVENTS });
 });
 
 // 2. Get current cached FB posts based on selected language

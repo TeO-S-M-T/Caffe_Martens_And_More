@@ -6,6 +6,7 @@ import {
   RefreshCw, AlertCircle, Save, Check, ArrowLeft
 } from "lucide-react";
 import { MenuCategory, MenuItem, FacebookPost } from "../types";
+import { CafeEvent, CafeEventKind } from "../data/events";
 import { useTranslation } from "../i18n";
 
 interface AdminPanelProps {
@@ -13,12 +14,72 @@ interface AdminPanelProps {
   onRefreshData: () => void;
 }
 
+/** Live thumbnail next to an image URL field, so a broken link is obvious. */
+function ImagePreview({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => { setFailed(false); }, [url]);
+
+  if (!url) {
+    return (
+      <div className="w-16 h-16 rounded-xl border border-dashed border-stone-300 dark:border-stone-700 flex items-center justify-center text-stone-300 shrink-0">
+        <Image size={18} />
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div
+        className="w-16 h-16 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-500 shrink-0"
+        title="Image could not be loaded"
+      >
+        <AlertCircle size={18} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={url}
+      alt=""
+      onError={() => setFailed(true)}
+      className="w-16 h-16 object-cover rounded-xl border border-stone-200 dark:border-stone-800 shrink-0"
+    />
+  );
+}
+
+/** Image URL input paired with its preview. */
+function ImageField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">{label}</label>
+      <div className="flex items-center gap-3">
+        <ImagePreview url={value} />
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={value}
+            placeholder="https://..."
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full pl-8 pr-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
+          />
+          <Image size={12} className="absolute left-3 top-3.5 text-stone-400" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) {
   const { language, t } = useTranslation();
   const [password, setPassword] = useState("");
+  const [token, setToken] = useState<string>("");
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<"menu" | "events">("menu");
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [adminConfigured, setAdminConfigured] = useState<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState<"menu" | "events" | "calendar">("menu");
 
   // Menu items list state
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -65,17 +126,62 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
     contentEn: ""
   });
 
+  // Calendar events state
+  const [calendarEvents, setCalendarEvents] = useState<CafeEvent[]>([]);
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [selectedCalEvent, setSelectedCalEvent] = useState<CafeEvent | null>(null);
+  const [isEditingCalEvent, setIsEditingCalEvent] = useState(false);
+
+  const emptyCalForm = {
+    id: "",
+    date: "",
+    kind: "weekend-menu" as CafeEventKind,
+    priceEur: "" as string,
+    imgUrl: "",
+    facebookUrl: "https://www.facebook.com/profile.php?id=61584459111985",
+    titleDe: "", titlePl: "", titleEn: "",
+    descDe: "", descPl: "", descEn: "",
+    starterDe: "", starterPl: "", starterEn: "",
+    catDe: "Wochenend-Menü", catPl: "Menu weekendowe", catEn: "Weekend Menu"
+  };
+  const [calForm, setCalForm] = useState(emptyCalForm);
+
   // Active form translation tab (🇩🇪, 🇵🇱, 🇬🇧)
   const [formLang, setFormLang] = useState<"de" | "pl" | "en">("de");
 
   // Notification states
   const [notify, setNotify] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
+  /**
+   * Every admin request carries the bearer token issued by the server at login.
+   * A 401 means the session expired, so we drop straight back to the lock screen
+   * instead of leaving the panel in a half-working state.
+   */
+  const adminFetch = async (url: string, init: RequestInit = {}) => {
+    const res = await fetch(url, {
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (res.status === 401) {
+      setIsAuthorized(false);
+      setToken("");
+      setAuthError(
+        language === "de" ? "Sitzung abgelaufen. Bitte erneut anmelden." :
+        language === "pl" ? "Sesja wygasła. Zaloguj się ponownie." :
+        "Session expired. Please sign in again."
+      );
+    }
+    return res;
+  };
+
   // Fetch admin raw data
   const fetchMenuRaw = async () => {
     try {
       setMenuLoading(true);
-      const res = await fetch("/api/admin/menu");
+      const res = await adminFetch("/api/admin/menu");
       const json = await res.json();
       if (json.success) {
         setMenuItems(json.data);
@@ -90,7 +196,7 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
   const fetchEventsRaw = async () => {
     try {
       setEventsLoading(true);
-      const res = await fetch("/api/admin/posts");
+      const res = await adminFetch("/api/admin/posts");
       const json = await res.json();
       if (json.success) {
         setEventsData(json.data);
@@ -102,26 +208,99 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
     }
   };
 
+  const fetchCalendarEvents = async () => {
+    try {
+      setCalendarLoading(true);
+      const res = await adminFetch("/api/admin/events");
+      const json = await res.json();
+      if (json.success) {
+        setCalendarEvents(json.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  // Tell the user up front if the server has no ADMIN_PASSWORD configured.
   useEffect(() => {
-    if (isAuthorized) {
+    fetch("/api/admin/status")
+      .then(r => r.json())
+      .then(j => setAdminConfigured(Boolean(j?.configured)))
+      .catch(() => setAdminConfigured(null));
+  }, []);
+
+  useEffect(() => {
+    if (isAuthorized && token) {
       fetchMenuRaw();
       fetchEventsRaw();
+      fetchCalendarEvents();
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, token]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  /**
+   * The password is checked on the server. It is never present in the client
+   * bundle, so it cannot be recovered by reading the shipped JavaScript.
+   */
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple secure password set by owner
-    if (password === "martens2026") {
-      setIsAuthorized(true);
-      setAuthError("");
-    } else {
+    setLoggingIn(true);
+    setAuthError("");
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password })
+      });
+      const json = await res.json();
+
+      if (res.ok && json.success && json.token) {
+        setToken(json.token);
+        setIsAuthorized(true);
+        setPassword("");
+        return;
+      }
+
+      if (json.code === "not_configured") {
+        setAuthError(
+          language === "de" ? "Admin-Zugang ist auf dem Server nicht konfiguriert (ADMIN_PASSWORD fehlt)." :
+          language === "pl" ? "Dostęp administratora nie jest skonfigurowany na serwerze (brak ADMIN_PASSWORD)." :
+          "Admin access is not configured on the server (ADMIN_PASSWORD missing)."
+        );
+      } else if (json.code === "rate_limited") {
+        setAuthError(
+          language === "de" ? "Zu viele Versuche. Bitte einige Minuten warten." :
+          language === "pl" ? "Zbyt wiele prób. Odczekaj kilka minut." :
+          "Too many attempts. Please wait a few minutes."
+        );
+      } else {
+        setAuthError(
+          language === "de" ? "Ungültiges Passwort." :
+          language === "pl" ? "Niepoprawne hasło." :
+          "Invalid password."
+        );
+      }
+    } catch (err) {
+      console.error(err);
       setAuthError(
-        language === "de" ? "Ungültiges Passwort." :
-        language === "pl" ? "Niepoprawne hasło." :
-        "Invalid password."
+        language === "de" ? "Server nicht erreichbar." :
+        language === "pl" ? "Serwer nieosiągalny." :
+        "Server unreachable."
       );
+    } finally {
+      setLoggingIn(false);
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await adminFetch("/api/admin/logout", { method: "POST" });
+    } catch { /* logging out locally is enough */ }
+    setToken("");
+    setIsAuthorized(false);
+    setPassword("");
   };
 
   const showNotification = (type: "success" | "error", msg: string) => {
@@ -200,7 +379,7 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
       const url = menuForm.id ? `/api/admin/menu/${menuForm.id}` : "/api/admin/menu";
       const method = menuForm.id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -225,7 +404,7 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
     if (!window.confirm(language === "pl" ? "Czy na pewno chcesz usunąć to danie?" : "Möchten Sie diesen Eintrag wirklich löschen?")) return;
 
     try {
-      const res = await fetch(`/api/admin/menu/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/admin/menu/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         showNotification("success", language === "pl" ? "Usunięto pozycję z menu." : "Eintrag erfolgreich gelöscht.");
@@ -317,7 +496,7 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
       const url = eventForm.id ? `/api/admin/posts/${eventForm.id}` : "/api/admin/posts";
       const method = eventForm.id ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -342,7 +521,7 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
     if (!window.confirm(language === "pl" ? "Czy na pewno chcesz usunąć to wydarzenie?" : "Möchten Sie dieses Event wirklich löschen?")) return;
 
     try {
-      const res = await fetch(`/api/admin/posts/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/admin/posts/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         showNotification("success", language === "pl" ? "Usunięto wydarzenie." : "Event erfolgreich gelöscht.");
@@ -352,6 +531,133 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
     } catch (e) {
       showNotification("error", "Error deleting event");
     }
+  };
+
+  // ----------------------------------------------------------------------
+  // Calendar Event Actions (the dishes shown on the public calendar)
+  // ----------------------------------------------------------------------
+  const handleOpenAddCalEvent = () => {
+    setCalForm({ ...emptyCalForm, date: new Date().toISOString().slice(0, 10) });
+    setSelectedCalEvent(null);
+    setIsEditingCalEvent(true);
+  };
+
+  const handleOpenEditCalEvent = (ev: CafeEvent) => {
+    setCalForm({
+      id: ev.id,
+      date: ev.date,
+      kind: ev.kind,
+      priceEur: ev.priceEur !== undefined ? String(ev.priceEur) : "",
+      imgUrl: ev.imgUrl || "",
+      facebookUrl: ev.facebookUrl || "",
+      titleDe: ev.title?.de || "", titlePl: ev.title?.pl || "", titleEn: ev.title?.en || "",
+      descDe: ev.description?.de || "", descPl: ev.description?.pl || "", descEn: ev.description?.en || "",
+      starterDe: ev.starter?.de || "", starterPl: ev.starter?.pl || "", starterEn: ev.starter?.en || "",
+      catDe: ev.category?.de || "", catPl: ev.category?.pl || "", catEn: ev.category?.en || ""
+    });
+    setSelectedCalEvent(ev);
+    setIsEditingCalEvent(true);
+  };
+
+  const handleSaveCalEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const payload = {
+      id: calForm.id || undefined,
+      date: calForm.date,
+      kind: calForm.kind,
+      priceEur: calForm.priceEur === "" ? undefined : Number(calForm.priceEur),
+      imgUrl: calForm.imgUrl,
+      facebookUrl: calForm.facebookUrl,
+      title: {
+        de: calForm.titleDe || calForm.titlePl || calForm.titleEn,
+        pl: calForm.titlePl || calForm.titleDe || calForm.titleEn,
+        en: calForm.titleEn || calForm.titleDe || calForm.titlePl
+      },
+      description: {
+        de: calForm.descDe || calForm.descPl || calForm.descEn,
+        pl: calForm.descPl || calForm.descDe || calForm.descEn,
+        en: calForm.descEn || calForm.descDe || calForm.descPl
+      },
+      category: {
+        de: calForm.catDe || "Wochenend-Menü",
+        pl: calForm.catPl || "Menu weekendowe",
+        en: calForm.catEn || "Weekend Menu"
+      },
+      // Blank in every language removes the starter entirely.
+      starter: (calForm.starterDe || calForm.starterPl || calForm.starterEn)
+        ? {
+            de: calForm.starterDe || calForm.starterPl || calForm.starterEn,
+            pl: calForm.starterPl || calForm.starterDe || calForm.starterEn,
+            en: calForm.starterEn || calForm.starterDe || calForm.starterPl
+          }
+        : undefined
+    };
+
+    try {
+      const url = selectedCalEvent ? `/api/admin/events/${selectedCalEvent.id}` : "/api/admin/events";
+      const method = selectedCalEvent ? "PUT" : "POST";
+
+      const res = await adminFetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showNotification("success", language === "pl" ? "Zapisano wydarzenie w kalendarzu!" : "Kalendereintrag gespeichert!");
+        fetchCalendarEvents();
+        setIsEditingCalEvent(false);
+        onRefreshData();
+      } else {
+        showNotification("error", data.message || "Failed to save calendar event");
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "Network connection failed.");
+    }
+  };
+
+  const handleDeleteCalEvent = async (id: string) => {
+    if (!window.confirm(language === "pl" ? "Usunąć ten dzień z kalendarza?" : "Diesen Kalendereintrag löschen?")) return;
+    try {
+      const res = await adminFetch(`/api/admin/events/${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        showNotification("success", language === "pl" ? "Usunięto z kalendarza." : "Kalendereintrag gelöscht.");
+        fetchCalendarEvents();
+        onRefreshData();
+      }
+    } catch {
+      showNotification("error", "Error deleting calendar event");
+    }
+  };
+
+  const handleResetCalendar = async () => {
+    if (!window.confirm(
+      language === "pl"
+        ? "Przywrócić wbudowane menu sierpniowe? Twoje zmiany w kalendarzu zostaną nadpisane."
+        : "Restore the built-in August menu? Your calendar changes will be overwritten."
+    )) return;
+    try {
+      const res = await adminFetch("/api/admin/events/reset", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showNotification("success", language === "pl" ? "Przywrócono menu sierpniowe." : "August-Menü wiederhergestellt.");
+        fetchCalendarEvents();
+        onRefreshData();
+      }
+    } catch {
+      showNotification("error", "Error resetting calendar");
+    }
+  };
+
+  const formatCalDate = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    if (!y || !m || !d) return iso;
+    const locale = language === "pl" ? "pl-PL" : language === "en" ? "en-GB" : "de-DE";
+    return new Date(y, m - 1, d).toLocaleDateString(locale, { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
   };
 
   // Unique list of events for the dashboard table (drawn from active language list first)
@@ -377,12 +683,23 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose} 
-            className="w-8 h-8 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
-          >
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAuthorized && (
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 rounded-full border border-stone-200 dark:border-stone-800 text-[10px] font-mono uppercase tracking-wider text-stone-500 hover:text-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Lock size={11} />
+                <span>{language === "pl" ? "Wyloguj" : language === "de" ? "Abmelden" : "Sign out"}</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* NOTIFICATION FEEDBACK TOAST */}
@@ -448,19 +765,33 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-natural-primary hover:bg-natural-primary-hover text-white text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                  disabled={loggingIn || adminConfigured === false}
+                  className="w-full py-3 bg-natural-primary hover:bg-natural-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
                 >
-                  <Unlock size={14} />
-                  <span>{language === "pl" ? "ODBLOKUJ PANEL" : "ZUGANG FREIGEBEN"}</span>
+                  {loggingIn ? <RefreshCw size={14} className="animate-spin" /> : <Unlock size={14} />}
+                  <span>
+                    {loggingIn
+                      ? (language === "pl" ? "SPRAWDZAM..." : "PRÜFE...")
+                      : (language === "pl" ? "ODBLOKUJ PANEL" : "ZUGANG FREIGEBEN")}
+                  </span>
                 </button>
               </div>
 
-              {/* Friendly Hint to bypass easily */}
-              <div className="mt-8 pt-4 border-t border-stone-100 dark:border-stone-900">
-                <p className="text-[10px] font-mono text-stone-400">
-                  Hint for Review: <span className="text-natural-primary font-bold select-all">martens2026</span>
-                </p>
-              </div>
+              {/* Server has no ADMIN_PASSWORD — say so instead of failing silently. */}
+              {adminConfigured === false && (
+                <div className="mt-6 pt-4 border-t border-stone-100 dark:border-stone-900">
+                  <p className="text-[10px] font-mono text-amber-700 dark:text-amber-400 leading-relaxed text-left flex items-start gap-1.5">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                    <span>
+                      {language === "pl"
+                        ? "Panel wyłączony: na serwerze nie ustawiono ADMIN_PASSWORD."
+                        : language === "de"
+                        ? "Panel deaktiviert: ADMIN_PASSWORD ist auf dem Server nicht gesetzt."
+                        : "Panel disabled: ADMIN_PASSWORD is not set on the server."}
+                    </span>
+                  </p>
+                </div>
+              )}
             </motion.form>
           </div>
         ) : (
@@ -489,13 +820,24 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
                       : "border-transparent text-stone-400 hover:text-stone-600"
                   }`}
                 >
+                  <FileText size={13} />
+                  <span>{language === "de" ? "Facebook-Beiträge" : language === "pl" ? "Posty Facebook" : "Facebook Posts"} ({currentEventsList.length})</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab("calendar"); setIsEditingCalEvent(false); }}
+                  className={`py-3.5 text-xs font-mono font-bold uppercase tracking-wider relative flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${
+                    activeTab === "calendar"
+                      ? "border-natural-primary text-natural-primary"
+                      : "border-transparent text-stone-400 hover:text-stone-600"
+                  }`}
+                >
                   <Calendar size={13} />
-                  <span>{language === "de" ? "Events & Kalender" : language === "pl" ? "Wydarzenia i Kalendarz" : "Events & Calendar"} ({currentEventsList.length})</span>
+                  <span>{language === "de" ? "Kalender" : language === "pl" ? "Kalendarz" : "Calendar"} ({calendarEvents.length})</span>
                 </button>
               </div>
 
               <div className="flex items-center gap-2">
-                {activeTab === "menu" ? (
+                {activeTab === "menu" && (
                   <button
                     onClick={handleOpenAddMenu}
                     className="px-3.5 py-1.5 bg-natural-primary hover:bg-natural-primary-hover text-white text-[11px] font-bold font-mono tracking-wide uppercase rounded-full flex items-center gap-1 shadow-sm cursor-pointer"
@@ -503,14 +845,34 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
                     <Plus size={12} />
                     <span>{language === "pl" ? "Dodaj Danie" : "Gericht Hinzufügen"}</span>
                   </button>
-                ) : (
+                )}
+                {activeTab === "events" && (
                   <button
                     onClick={handleOpenAddEvent}
                     className="px-3.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-[11px] font-bold font-mono tracking-wide uppercase rounded-full flex items-center gap-1 shadow-sm cursor-pointer"
                   >
                     <Plus size={12} />
-                    <span>{language === "pl" ? "Dodaj Wydarzenie" : "Event Hinzufügen"}</span>
+                    <span>{language === "pl" ? "Dodaj Post" : "Beitrag Hinzufügen"}</span>
                   </button>
+                )}
+                {activeTab === "calendar" && (
+                  <>
+                    <button
+                      onClick={handleResetCalendar}
+                      className="px-3 py-1.5 border border-stone-250 dark:border-stone-800 text-stone-500 hover:text-stone-700 text-[11px] font-mono tracking-wide uppercase rounded-full flex items-center gap-1 cursor-pointer"
+                      title={language === "pl" ? "Przywróć wbudowane menu sierpniowe" : "Restore built-in August menu"}
+                    >
+                      <RefreshCw size={11} />
+                      <span>{language === "pl" ? "Reset" : "Reset"}</span>
+                    </button>
+                    <button
+                      onClick={handleOpenAddCalEvent}
+                      className="px-3.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white text-[11px] font-bold font-mono tracking-wide uppercase rounded-full flex items-center gap-1 shadow-sm cursor-pointer"
+                    >
+                      <Plus size={12} />
+                      <span>{language === "pl" ? "Dodaj Dzień" : "Tag Hinzufügen"}</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -615,18 +977,11 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
                         </div>
                       </div>
 
-                      <div>
-                        <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">Image URL</label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={menuForm.imageUrl}
-                            onChange={(e) => setMenuForm({ ...menuForm, imageUrl: e.target.value })}
-                            className="w-full pl-8 pr-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
-                          />
-                          <Image size={12} className="absolute left-3 top-3.5 text-stone-400" />
-                        </div>
-                      </div>
+                      <ImageField
+                        label={language === "pl" ? "Zdjęcie dania (URL)" : "Image URL"}
+                        value={menuForm.imageUrl}
+                        onChange={(v) => setMenuForm({ ...menuForm, imageUrl: v })}
+                      />
 
                       {/* Translatable Fields */}
                       <div className="p-5 bg-stone-50 dark:bg-stone-900/50 border border-stone-200/50 dark:border-stone-850 rounded-2xl space-y-4">
@@ -889,18 +1244,11 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
 
                       {/* Fields */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div>
-                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">Event Image URL</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={eventForm.imgUrl}
-                              onChange={(e) => setEventForm({ ...eventForm, imgUrl: e.target.value })}
-                              className="w-full pl-8 pr-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
-                            />
-                            <Image size={12} className="absolute left-3 top-3.5 text-stone-400" />
-                          </div>
-                        </div>
+                        <ImageField
+                          label={language === "pl" ? "Zdjęcie posta (URL)" : "Event Image URL"}
+                          value={eventForm.imgUrl}
+                          onChange={(v) => setEventForm({ ...eventForm, imgUrl: v })}
+                        />
 
                         <div>
                           <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">Facebook Link (Optional)</label>
@@ -1137,6 +1485,294 @@ export default function AdminPanel({ onClose, onRefreshData }: AdminPanelProps) 
                                     </tr>
                                   );
                                 })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 3: PUBLIC CALENDAR (dishes shown on the website calendar) */}
+              {activeTab === "calendar" && (
+                <div>
+                  {isEditingCalEvent ? (
+                    /* EDITING / ADDING A CALENDAR DAY */
+                    <motion.form
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onSubmit={handleSaveCalEvent}
+                      className="bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-2xl p-6 md:p-8 space-y-6 max-w-3xl mx-auto"
+                    >
+                      <div className="flex items-center justify-between border-b border-stone-150 dark:border-stone-850 pb-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCalEvent(false)}
+                            className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-900 text-stone-400 hover:text-stone-600 transition-colors"
+                          >
+                            <ArrowLeft size={16} />
+                          </button>
+                          <h3 className="font-serif text-lg font-bold">
+                            {selectedCalEvent
+                              ? (language === "pl" ? "Edycja dnia w kalendarzu" : "Kalendertag bearbeiten")
+                              : (language === "pl" ? "Nowy dzień w kalendarzu" : "Neuer Kalendertag")}
+                          </h3>
+                        </div>
+
+                        <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-900 border border-stone-200/50 dark:border-stone-850 p-1 rounded-full text-xs">
+                          {(["de", "pl", "en"] as const).map((lg) => (
+                            <button
+                              key={lg}
+                              type="button"
+                              onClick={() => setFormLang(lg)}
+                              className={`px-3 py-1 rounded-full uppercase font-mono tracking-wide ${formLang === lg ? "bg-natural-primary text-white font-semibold" : "text-stone-400 hover:text-stone-600"}`}
+                            >
+                              {lg === "de" ? "DE 🇩🇪" : lg === "pl" ? "PL 🇵🇱" : "EN 🇬🇧"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Date / kind / price */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">
+                            {language === "pl" ? "Data" : "Datum"}
+                          </label>
+                          <input
+                            type="date"
+                            value={calForm.date}
+                            onChange={(e) => setCalForm({ ...calForm, date: e.target.value })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">
+                            {language === "pl" ? "Rodzaj" : "Art"}
+                          </label>
+                          <select
+                            value={calForm.kind}
+                            onChange={(e) => setCalForm({ ...calForm, kind: e.target.value as CafeEventKind })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
+                          >
+                            <option value="weekend-menu">{language === "pl" ? "Menu weekendowe" : "Wochenend-Menü"}</option>
+                            <option value="concert">{language === "pl" ? "Koncert" : "Konzert"}</option>
+                            <option value="special">{language === "pl" ? "Akcja specjalna" : "Spezial-Aktion"}</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">
+                            {language === "pl" ? "Cena EUR (puste = brak)" : "Preis EUR (leer = keiner)"}
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="12.90"
+                              value={calForm.priceEur}
+                              onChange={(e) => setCalForm({ ...calForm, priceEur: e.target.value })}
+                              className="w-full pl-8 pr-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
+                            />
+                            <DollarSign size={12} className="absolute left-3 top-3.5 text-stone-400" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <ImageField
+                        label={language === "pl" ? "Zdjęcie dania (URL)" : "Bild des Gerichts (URL)"}
+                        value={calForm.imgUrl}
+                        onChange={(v) => setCalForm({ ...calForm, imgUrl: v })}
+                      />
+
+                      <div>
+                        <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1.5">
+                          {language === "pl" ? "Link do Facebooka (opcjonalnie)" : "Facebook-Link (optional)"}
+                        </label>
+                        <input
+                          type="text"
+                          value={calForm.facebookUrl}
+                          onChange={(e) => setCalForm({ ...calForm, facebookUrl: e.target.value })}
+                          className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 rounded-xl text-xs focus:outline-none"
+                          placeholder="https://www.facebook.com/..."
+                        />
+                      </div>
+
+                      {/* Translatable fields */}
+                      <div className="p-5 bg-stone-50 dark:bg-stone-900/50 border border-stone-200/50 dark:border-stone-850 rounded-2xl space-y-4">
+                        <div className="flex items-center gap-1.5 border-b border-stone-200/50 dark:border-stone-800 pb-2 mb-3">
+                          <Globe size={13} className="text-natural-primary" />
+                          <span className="text-[10px] font-mono uppercase tracking-wider">
+                            {language === "pl" ? "Edytujesz wersję" : "Editing Translation"}:{" "}
+                            <strong className="text-natural-primary">
+                              {formLang === "de" ? "DEUTSCH 🇩🇪" : formLang === "pl" ? "POLSKI 🇵🇱" : "ENGLISH 🇬🇧"}
+                            </strong>
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1">
+                            {language === "pl" ? "Nazwa dania" : "Name des Gerichts"} ({formLang.toUpperCase()})
+                          </label>
+                          <input
+                            type="text"
+                            value={formLang === "de" ? calForm.titleDe : formLang === "pl" ? calForm.titlePl : calForm.titleEn}
+                            onChange={(e) => setCalForm({
+                              ...calForm,
+                              ...(formLang === "de" ? { titleDe: e.target.value } : formLang === "pl" ? { titlePl: e.target.value } : { titleEn: e.target.value })
+                            })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-white dark:bg-stone-950 rounded-xl text-xs focus:outline-none"
+                            required={formLang === "de"}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1">
+                            {language === "pl" ? "Opis" : "Beschreibung"} ({formLang.toUpperCase()})
+                          </label>
+                          <textarea
+                            value={formLang === "de" ? calForm.descDe : formLang === "pl" ? calForm.descPl : calForm.descEn}
+                            onChange={(e) => setCalForm({
+                              ...calForm,
+                              ...(formLang === "de" ? { descDe: e.target.value } : formLang === "pl" ? { descPl: e.target.value } : { descEn: e.target.value })
+                            })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-white dark:bg-stone-950 rounded-xl text-xs focus:outline-none h-20 resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1">
+                            {language === "pl" ? "Przystawka w cenie (puste = brak)" : "Vorspeise inklusive (leer = keine)"} ({formLang.toUpperCase()})
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={language === "pl" ? "np. Domowy rosół" : "z. B. Hausgemachte Hühnersuppe"}
+                            value={formLang === "de" ? calForm.starterDe : formLang === "pl" ? calForm.starterPl : calForm.starterEn}
+                            onChange={(e) => setCalForm({
+                              ...calForm,
+                              ...(formLang === "de" ? { starterDe: e.target.value } : formLang === "pl" ? { starterPl: e.target.value } : { starterEn: e.target.value })
+                            })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-white dark:bg-stone-950 rounded-xl text-xs focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-mono uppercase tracking-widest text-stone-400 block mb-1">
+                            {language === "pl" ? "Etykieta (plakietka)" : "Kategorie-Badge"} ({formLang.toUpperCase()})
+                          </label>
+                          <input
+                            type="text"
+                            value={formLang === "de" ? calForm.catDe : formLang === "pl" ? calForm.catPl : calForm.catEn}
+                            onChange={(e) => setCalForm({
+                              ...calForm,
+                              ...(formLang === "de" ? { catDe: e.target.value } : formLang === "pl" ? { catPl: e.target.value } : { catEn: e.target.value })
+                            })}
+                            className="w-full px-3.5 py-2.5 border border-stone-250 dark:border-stone-800 bg-white dark:bg-stone-950 rounded-xl text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-150 dark:border-stone-850">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingCalEvent(false)}
+                          className="px-5 py-2.5 border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-xl text-xs font-mono font-medium transition-colors cursor-pointer"
+                        >
+                          {language === "pl" ? "Anuluj" : "Abbrechen"}
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 bg-natural-primary hover:bg-natural-primary-hover text-white rounded-xl text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        >
+                          <Save size={14} />
+                          <span>{language === "pl" ? "Zapisz Dzień" : "Tag Speichern"}</span>
+                        </button>
+                      </div>
+                    </motion.form>
+                  ) : (
+                    /* LIST OF CALENDAR DAYS */
+                    <div className="space-y-4">
+                      <p className="text-[11px] text-stone-500 font-light leading-relaxed bg-stone-100/60 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-850 rounded-xl px-4 py-3">
+                        {language === "pl"
+                          ? "To są dni widoczne w kalendarzu na stronie. Każdy wpis pokazuje się na swojej dacie wraz z ceną."
+                          : language === "de"
+                          ? "Dies sind die Tage, die im Kalender auf der Website erscheinen. Jeder Eintrag wird an seinem Datum mit Preis angezeigt."
+                          : "These are the days shown in the calendar on the website. Each entry appears on its date together with its price."}
+                      </p>
+
+                      {calendarLoading ? (
+                        <div className="py-20 text-center">
+                          <RefreshCw className="animate-spin text-natural-primary mx-auto mb-3" size={24} />
+                          <p className="text-xs text-stone-500 font-mono">Loading calendar...</p>
+                        </div>
+                      ) : calendarEvents.length === 0 ? (
+                        <div className="py-20 text-center">
+                          <Calendar className="text-stone-300 mx-auto mb-3" size={28} />
+                          <p className="text-xs text-stone-500 font-mono">
+                            {language === "pl" ? "Kalendarz jest pusty." : "The calendar is empty."}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-850 rounded-2xl overflow-hidden shadow-xs">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs">
+                              <thead>
+                                <tr className="bg-stone-50 dark:bg-stone-900 border-b border-stone-200 dark:border-stone-850 text-[10px] font-mono tracking-widest text-stone-400 uppercase">
+                                  <th className="py-3.5 px-5 w-16">Image</th>
+                                  <th className="py-3.5 px-4 w-40">{language === "pl" ? "Data" : "Datum"}</th>
+                                  <th className="py-3.5 px-4">{language === "pl" ? "Danie" : "Gericht"} ({language.toUpperCase()})</th>
+                                  <th className="py-3.5 px-4 w-24">{language === "pl" ? "Cena" : "Preis"}</th>
+                                  <th className="py-3.5 px-5 text-right w-24">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-stone-100 dark:divide-stone-900">
+                                {calendarEvents.map((ev) => (
+                                  <tr key={ev.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-900/30 transition-colors">
+                                    <td className="py-3 px-5">
+                                      <ImagePreview url={ev.imgUrl} />
+                                    </td>
+                                    <td className="py-3 px-4 font-mono text-[11px] text-stone-600 dark:text-stone-400">
+                                      {formatCalDate(ev.date)}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                      <div className="font-bold text-stone-800 dark:text-stone-200">
+                                        {ev.title?.[language] || ev.title?.de || "—"}
+                                      </div>
+                                      {ev.starter && (
+                                        <div className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">
+                                          + {ev.starter?.[language] || ev.starter?.de}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-4 font-bold text-stone-700 dark:text-stone-300">
+                                      {ev.priceEur !== undefined ? `${ev.priceEur.toFixed(2).replace(".", ",")} €` : "—"}
+                                    </td>
+                                    <td className="py-3 px-5 text-right">
+                                      <div className="inline-flex gap-2.5">
+                                        <button
+                                          onClick={() => handleOpenEditCalEvent(ev)}
+                                          className="p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-500 hover:text-natural-primary transition-colors cursor-pointer"
+                                          title="Edit / Edytuj"
+                                        >
+                                          <Edit2 size={13} />
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteCalEvent(ev.id)}
+                                          className="p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                          title="Delete / Usuń"
+                                        >
+                                          <Trash2 size={13} />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           </div>

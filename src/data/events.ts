@@ -1,4 +1,9 @@
-import { Language } from "../i18n";
+/**
+ * Language keys used by the event records. Declared locally (rather than
+ * imported from i18n) so the Express server can import this module without
+ * pulling React into the server bundle.
+ */
+export type EventLang = "de" | "pl" | "en";
 
 /**
  * Real, editable event data for the café calendar.
@@ -26,13 +31,13 @@ export interface CafeEvent {
   imgUrl: string;
   facebookUrl: string;
   /** Headline shown on the calendar card */
-  title: Record<Language, string>;
+  title: Record<EventLang, string>;
   /** Longer body text */
-  description: Record<Language, string>;
+  description: Record<EventLang, string>;
   /** Optional starter served alongside (e.g. the Sunday chicken soup) */
-  starter?: Record<Language, string>;
+  starter?: Record<EventLang, string>;
   /** Badge label */
-  category: Record<Language, string>;
+  category: Record<EventLang, string>;
 }
 
 const FB_URL = "https://www.facebook.com/profile.php?id=61584459111985";
@@ -44,14 +49,14 @@ const IMG = {
   poultry: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=600&auto=format&fit=crop"
 };
 
-const CAT_LUNCH: Record<Language, string> = {
+const CAT_LUNCH: Record<EventLang, string> = {
   de: "Wochenend-Menü",
   pl: "Menu weekendowe",
   en: "Weekend Menu"
 };
 
 /** The chicken soup (rosół) served with every Sunday main course. */
-const SUNDAY_SOUP: Record<Language, string> = {
+const SUNDAY_SOUP: Record<EventLang, string> = {
   de: "Hausgemachte Hühnersuppe (Rosół)",
   pl: "Domowy rosół",
   en: "Homemade chicken soup (Rosół)"
@@ -262,12 +267,19 @@ export function eventDate(ev: CafeEvent): Date {
   return new Date(y, m - 1, d);
 }
 
-/** Events falling in the given year/month (month is 0-indexed). */
+/** Events from the given list falling in a year/month (month is 0-indexed). */
+export function filterEventsForMonth(list: CafeEvent[], year: number, month: number): CafeEvent[] {
+  return list
+    .filter(ev => {
+      const d = eventDate(ev);
+      return d.getFullYear() === year && d.getMonth() === month;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Convenience wrapper over the bundled seed data. */
 export function getEventsForMonth(year: number, month: number): CafeEvent[] {
-  return CAFE_EVENTS.filter(ev => {
-    const d = eventDate(ev);
-    return d.getFullYear() === year && d.getMonth() === month;
-  }).sort((a, b) => a.date.localeCompare(b.date));
+  return filterEventsForMonth(CAFE_EVENTS, year, month);
 }
 
 /** Months (as "YYYY-M") that contain at least one event — used to hint navigation. */
@@ -282,7 +294,7 @@ export function getMonthsWithEvents(): string[] {
   ).sort();
 }
 
-export function formatPrice(priceEur: number | undefined, language: Language): string {
+export function formatPrice(priceEur: number | undefined, language: EventLang): string {
   if (priceEur === undefined) return "";
   const value = priceEur.toFixed(2).replace(".", ",");
   return language === "en" ? `€${priceEur.toFixed(2)}` : `${value} €`;

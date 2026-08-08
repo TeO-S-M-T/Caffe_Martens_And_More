@@ -452,7 +452,7 @@ export default function FbGallery({ refreshTrigger = 0 }: FbGalleryProps) {
         </AnimatePresence>
 
         {/* Dynamic Interactive Event Calendar Widget based on Facebook feeds */}
-        <EventCalendar />
+        <EventCalendar refreshTrigger={refreshTrigger} />
 
         {/* Facebook Page Stats banner card */}
         <div className="mt-16 p-6 rounded-3xl bg-natural-light border border-natural-card-border flex flex-col md:flex-row items-center justify-between gap-6">
