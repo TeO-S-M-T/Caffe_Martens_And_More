@@ -5,12 +5,94 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Café Martens &amp; More — Goch</title>
     <meta name="description" content="Café Martens &amp; More, Markt 12, 47574 Goch. Frühstück, Wochenend-Menü, hausgemachte Kuchen, Specialty Coffee und Business Catering." />
+    <link rel="canonical" href="https://caffe-martens.com/" />
+    <meta name="robots" content="index, follow" />
     <meta property="og:title" content="Café Martens &amp; More — Goch" />
     <meta property="og:description" content="Frühstück, Wochenend-Menü, hausgemachte Kuchen und Business Catering in Goch." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://caffe-martens.com/" />
+    <meta property="og:locale" content="de_DE" />
+    <!-- TODO Suweren: brak jakiegokolwiek zdjecia w repo, wiec og:image celowo NIE MA.
+         Tag wskazujacy na nieistniejacy plik jest gorszy niz jego brak - podglad linku
+         wychodzi wtedy pusty. Wgraj jedno zdjecie lokalu do public/ i dopisz tu URL. -->
+
+    <!--
+      DANE STRUKTURALNE - to jest jedyna rzecz na tej stronie, ktora czyta mapa.
+
+      Wpisane STATYCZNIE w index.html, a nie wstrzykiwane przez Reacta, bo cala
+      aplikacja to pusty <div id="root"> - robot bez wykonania JS nie widzi tu
+      ani adresu, ani godzin. Zmierzone: zywa strona oddaje 856 bajtow.
+
+      Kazda wartosc pochodzi z kodu tej aplikacji (ContactFooter.tsx), a wspolrzedne
+      z geokodera OpenStreetMap dla "Markt 12, 47574 Goch" - nic nie jest zmyslone.
+      Wtorek i sroda sa POMINIETE swiadomie: w schema.org dzien nieczynny zapisuje
+      sie jego nieobecnoscia.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CafeOrCoffeeShop",
+      "name": "Café Martens & More",
+      "url": "https://caffe-martens.com/",
+      "telephone": "+49 2823 4191522",
+      "email": "cafemartensinfo@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Markt 12",
+        "postalCode": "47574",
+        "addressLocality": "Goch",
+        "addressRegion": "Nordrhein-Westfalen",
+        "addressCountry": "DE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 51.6764872,
+        "longitude": 6.1556939
+      },
+      "openingHoursSpecification": [
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Monday",    "opens": "09:00", "closes": "17:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Thursday",  "opens": "09:00", "closes": "17:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Friday",    "opens": "09:00", "closes": "17:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday",  "opens": "09:00", "closes": "17:00" },
+        { "@type": "OpeningHoursSpecification", "dayOfWeek": "Sunday",    "opens": "09:00", "closes": "17:00" }
+      ],
+      "areaServed": [
+        { "@type": "City", "name": "Goch" },
+        { "@type": "AdministrativeArea", "name": "Kreis Kleve" }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      NAP (nazwa / adres / telefon) w surowym HTML.
+
+      Google renderuje JS, ale renderuje go PO indeksacji i nie zawsze. Adres wpisany
+      tutaj jest widoczny natychmiast i dla kazdego robota - takze tych, ktore JS-a
+      nie uruchamiaja wcale. Tresc jest identyczna z ta w stopce aplikacji; rozjazd
+      miedzy nimi szkodzi bardziej niz brak, wiec przy zmianie godzin poprawiamy
+      OBA miejsca (tutaj, dane strukturalne wyzej i ContactFooter.tsx).
+    -->
+    <noscript>
+      <h1>Café Martens &amp; More</h1>
+      <address>
+        Markt 12, 47574 Goch, Deutschland<br />
+        Telefon: <a href="tel:+4928234191522">+49 2823 4191522</a><br />
+        E-Mail: <a href="mailto:cafemartensinfo@gmail.com">cafemartensinfo@gmail.com</a>
+      </address>
+      <h2>Öffnungszeiten</h2>
+      <ul>
+        <li>Montag: 09:00 – 17:00</li>
+        <li>Dienstag: geschlossen</li>
+        <li>Mittwoch: geschlossen</li>
+        <li>Donnerstag: 09:00 – 17:00</li>
+        <li>Freitag: 09:00 – 17:00</li>
+        <li>Samstag: 09:00 – 17:00</li>
+        <li>Sonntag: 09:00 – 17:00</li>
+      </ul>
+      <p>Frühstück, Wochenend-Menü, hausgemachte Kuchen, Specialty Coffee und Business Catering in Goch.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
