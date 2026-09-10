@@ -1,0 +1,31 @@
+{
+  "_co_to_jest": "Deklaracja tego, co REALNIE stoi w wizytowce Google Business Profile. Wpis GBP jest za logowaniem wlasciciela - zaden skrypt go nie odczyta, wiec przepisuje go czlowiek. Dopoki 'potwierdzonoDnia' jest null, Latarnik NIE porownuje strony z mapa i mowi to wprost, zamiast udawac, ze sprawdzil.",
+  "_jak_wypelnic": "Otworz wizytowke w Google, przepisz stan 1:1 (nie to, co powinno byc - to, co JEST), wpisz dzisiejsza date w 'potwierdzonoDnia' i swoje imie w 'potwierdzil'. Potem: npm run latarnik",
+
+  "potwierdzonoDnia": null,
+  "potwierdzil": null,
+
+  "nazwa": null,
+  "telefon": null,
+  "adres": null,
+  "www": null,
+
+  "_godziny": "Format dowolny z tych, ktore Latarnik rozumie: '09:00 - 17:00', '09:00 AM - 05:00 PM', albo null dla dnia nieczynnego.",
+  "godziny": {
+    "Monday": null,
+    "Tuesday": null,
+    "Wednesday": null,
+    "Thursday": null,
+    "Friday": null,
+    "Saturday": null,
+    "Sunday": null
+  },
+
+  "_duplikaty": "Osobne wizytowki pod tym samym adresem. Kazda taka pozycja bedzie zglaszana jako rozjazd, dopoki jej nie scalisz w GBP - bo dwa wpisy pod jednym adresem dziela sygnal na pol.",
+  "duplikaty": [
+    {
+      "nazwa": "Cafe Martens - Taste of Ceylon",
+      "uwaga": "Widziany na mapie pod tym samym adresem Markt 12, z godzinami 14:00-21:00, ktore nie zgadzaja sie z 09:00-17:00 ze strony. ZRODLO: zrzut ekranu z wyszukiwania, NIE odczyt z GBP - potwierdz w wizytowce, zanim uznasz to za fakt."
+    }
+  ]
+}
