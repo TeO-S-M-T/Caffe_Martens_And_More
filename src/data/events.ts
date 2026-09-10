@@ -258,6 +258,168 @@ export const CAFE_EVENTS: CafeEvent[] = [
       pl: "Kotlet po chłopsku z boczkiem, jajkiem sadzonym i chrupiącymi ziemniakami. Na przystawkę domowy rosół.",
       en: "Farmer's schnitzel with bacon, fried egg and crispy fried potatoes. Served after our homemade chicken soup."
     }
+  },
+
+  // ------------------------------------------------------------- September 2026
+  // Przepisane 1:1 z plakatu „MITTAGESSEN IM SEPTEMBER / HAUSGEMACHT MIT LIEBE".
+  // Ceny i skład dań pochodzą z plakatu — nic nie jest zmyślone. Każda niedziela
+  // z rosołem, dokładnie tak, jak plakat pokazuje „Hühnersuppe +" przy każdym
+  // niedzielnym daniu. Soboty i niedziele potwierdzone kalendarzem 2026.
+  {
+    id: "wm-2026-09-05",
+    date: "2026-09-05",
+    kind: "weekend-menu",
+    priceEur: 15.0,
+    imgUrl: IMG.pasta,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    title: {
+      de: "Nudeln mit Hähnchen und Spinat",
+      pl: "Makaron z kurczakiem i szpinakiem",
+      en: "Pasta with chicken and spinach"
+    },
+    description: {
+      de: "Penne in einer cremigen Sauce mit zartem Hähnchen und frischem Spinat.",
+      pl: "Penne w kremowym sosie z delikatnym kurczakiem i świeżym szpinakiem.",
+      en: "Penne in a creamy sauce with tender chicken and fresh spinach."
+    }
+  },
+  {
+    id: "wm-2026-09-06",
+    date: "2026-09-06",
+    kind: "weekend-menu",
+    priceEur: 17.9,
+    imgUrl: IMG.meat,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Pilzkotelett mit Kartoffeln und Salat",
+      pl: "Kotlet z pieczarkami, ziemniaki i surówka",
+      en: "Mushroom cutlet with potatoes and salad"
+    },
+    description: {
+      de: "Pilzkotelett mit Kartoffeln und Salat. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Kotlet z pieczarkami z ziemniakami i surówką. Na przystawkę domowy rosół.",
+      en: "Mushroom cutlet with potatoes and salad. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-09-12",
+    date: "2026-09-12",
+    kind: "weekend-menu",
+    priceEur: 7.5,
+    imgUrl: IMG.soup,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    title: {
+      de: "Zwiebelsuppe",
+      pl: "Zupa cebulowa",
+      en: "Onion soup"
+    },
+    description: {
+      de: "Herzhafte französische Zwiebelsuppe mit überbackenem Käsebrot.",
+      pl: "Sycąca francuska zupa cebulowa z grzanką zapiekaną serem.",
+      en: "Hearty French onion soup with cheese-gratinated bread."
+    }
+  },
+  {
+    id: "wm-2026-09-13",
+    date: "2026-09-13",
+    kind: "weekend-menu",
+    priceEur: 18.9,
+    imgUrl: IMG.meat,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Nackenkotelett mit Kluski und angemachtem Weißkohl",
+      pl: "Karkówka z kluskami i kapustą zasmażaną",
+      en: "Pork neck cutlet with kluski and dressed white cabbage"
+    },
+    description: {
+      de: "Nackenkotelett mit Kluski und angemachtem Weißkohl. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Karkówka z kluskami i białą kapustą zasmażaną. Na przystawkę domowy rosół.",
+      en: "Pork neck cutlet with kluski and dressed white cabbage. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-09-19",
+    date: "2026-09-19",
+    kind: "weekend-menu",
+    priceEur: 11.9,
+    imgUrl: IMG.soup,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    title: {
+      de: "Bauerntopf",
+      pl: "Garnek chłopski",
+      en: "Farmer's pot"
+    },
+    description: {
+      de: "Deftiger Eintopf mit Schweinefleisch, Gemüse, Kartoffeln und Kielbasa.",
+      pl: "Treściwy jednogarnkowiec z wieprzowiną, warzywami, ziemniakami i kiełbasą.",
+      en: "Hearty one-pot stew with pork, vegetables, potatoes and kielbasa."
+    }
+  },
+  {
+    id: "wm-2026-09-20",
+    date: "2026-09-20",
+    kind: "weekend-menu",
+    priceEur: 22.5,
+    imgUrl: IMG.meat,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Rouladen mit Kluski und Rotkohl",
+      pl: "Rolady z kluskami i czerwoną kapustą",
+      en: "Roulades with kluski and red cabbage"
+    },
+    description: {
+      de: "Rouladen mit Kluski und Rotkohl. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Rolady z kluskami i czerwoną kapustą. Na przystawkę domowy rosół.",
+      en: "Roulades with kluski and red cabbage. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-09-26",
+    date: "2026-09-26",
+    kind: "weekend-menu",
+    priceEur: 7.5,
+    imgUrl: IMG.soup,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    title: {
+      de: "Gurkensuppe",
+      pl: "Zupa ogórkowa",
+      en: "Cucumber soup"
+    },
+    description: {
+      de: "Traditionelle polnische Gurkensuppe mit Kartoffeln, Karotten und Dill.",
+      pl: "Tradycyjna zupa ogórkowa z ziemniakami, marchewką i koperkiem.",
+      en: "Traditional Polish cucumber soup with potatoes, carrots and dill."
+    }
+  },
+  {
+    id: "wm-2026-09-27",
+    date: "2026-09-27",
+    kind: "weekend-menu",
+    priceEur: 18.9,
+    imgUrl: IMG.poultry,
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Devolay mit Kartoffeln und Salat",
+      pl: "Dewolaj z ziemniakami i surówką",
+      en: "Chicken Kiev with potatoes and salad"
+    },
+    description: {
+      de: "Devolay mit Kartoffeln und Salat. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Dewolaj z ziemniakami i surówką. Na przystawkę domowy rosół.",
+      en: "Chicken Kiev with potatoes and salad. Served after our homemade chicken soup."
+    }
   }
 ];
 
