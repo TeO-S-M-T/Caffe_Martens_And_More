@@ -4,6 +4,7 @@ import { X, Sparkles, AlertTriangle, Check, Leaf, Info, Coffee, HelpCircle } fro
 import { MenuItem, MenuCategory } from "../types";
 import { MENU_DETAILS_DATA, MenuItemDetails, LocalizedDetails } from "../data/menuDetails";
 import { useTranslation } from "../i18n";
+import SafeImage from "./SafeImage";
 
 interface MenuItemModalProps {
   item: MenuItem;
@@ -246,9 +247,10 @@ export default function MenuItemModal({ item, onClose }: MenuItemModalProps) {
           
           {/* Header Image Header Banner */}
           <div className="relative h-64 md:h-80 bg-stone-100 shrink-0">
-            <img
+            <SafeImage
               src={item.imageUrl}
               alt={item.name}
+              coffee={item.category === MenuCategory.KAWY}
               className="w-full h-full object-cover"
             />
             {/* Visual gradient overlay */}

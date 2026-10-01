@@ -147,7 +147,7 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
     category: MenuCategory.OBIADY,
     priceEur: 21.90,
     pricePln: 94.20,
-    imageUrl: "https://images.unsplash.com/photo-1627308595229-7830a5c91f9f?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "/obiady/2026-10-11.jpg",
     name: {
       de: "Rinderroulade mit Schlesischen Klößen",
       pl: "Rolada wołowa ze śląskimi kluskami",
@@ -279,7 +279,7 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
     category: MenuCategory.OBIADY,
     priceEur: 17.90,
     pricePln: 77.00,
-    imageUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "/obiady/2026-10-04.jpg",
     name: {
       de: "Schweinenacken mit Schlesischen Klößen",
       pl: "Karkówka ze śląskimi kluskami",
@@ -459,7 +459,7 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
     category: MenuCategory.KAWY,
     priceEur: 3.60,
     pricePln: 15.50,
-    imageUrl: "https://images.unsplash.com/photo-1571115177098-24ec42095185?q=80&w=600&auto=format&fit=crop",
+    imageUrl: "/kawa-latte.gif",
     name: {
       de: "Samtiges Cappuccino",
       pl: "Aksamitne Cappuccino",
