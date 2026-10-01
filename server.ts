@@ -459,7 +459,7 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
     category: MenuCategory.KAWY,
     priceEur: 3.60,
     pricePln: 15.50,
-    imageUrl: "/kawa-latte.gif",
+    imageUrl: "/kawa-latte.mp4",
     name: {
       de: "Samtiges Cappuccino",
       pl: "Aksamitne Cappuccino",
