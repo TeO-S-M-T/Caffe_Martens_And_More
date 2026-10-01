@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, ExternalLink, Clock, Sparkles, Soup } from "lucide-react";
 import { useTranslation } from "../i18n";
+import SafeImage from "./SafeImage";
 import { CAFE_EVENTS, CafeEvent, eventDate, filterEventsForMonth, formatPrice } from "../data/events";
 
 /** Local "today" — no longer pinned to a hardcoded date. */
@@ -320,7 +321,7 @@ export default function EventCalendar({ refreshTrigger = 0 }: EventCalendarProps
               >
                 <div>
                   <div className="relative h-48 overflow-hidden bg-stone-100">
-                    <img
+                    <SafeImage
                       src={activeEvent.imgUrl}
                       alt={activeEvent.title[language]}
                       className="w-full h-full object-cover"

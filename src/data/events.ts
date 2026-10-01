@@ -420,6 +420,88 @@ export const CAFE_EVENTS: CafeEvent[] = [
       pl: "Dewolaj z ziemniakami i surówką. Na przystawkę domowy rosół.",
       en: "Chicken Kiev with potatoes and salad. Served after our homemade chicken soup."
     }
+  },
+  // --------------------------------------------------------------- October 2026
+  // Z ulotki „Mittagessen im Oktober" (Café Martens & More). Zdjęcia: talerze wycięte z tej ulotki.
+  {
+    id: "wm-2026-10-04",
+    date: "2026-10-04",
+    kind: "weekend-menu",
+    priceEur: 18.9,
+    imgUrl: "/obiady/2026-10-04.jpg",
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Saftiger Schweinenacken mit Polnischen Klößen und Roter Bete",
+      pl: "Soczysta karkówka z polskimi kluskami i buraczkami",
+      en: "Juicy pork neck with Polish dumplings and beetroot"
+    },
+    description: {
+      de: "Saftiger Schweinenacken mit Polnischen Klößen und Roter Bete. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Soczysta karkówka z polskimi kluskami i buraczkami. Na przystawkę domowy rosół.",
+      en: "Juicy pork neck with Polish dumplings and beetroot. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-10-11",
+    date: "2026-10-11",
+    kind: "weekend-menu",
+    priceEur: 22.9,
+    imgUrl: "/obiady/2026-10-11.jpg",
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Rinderroulade mit Polnischen Klößen und Salatvariation",
+      pl: "Rolada wołowa z polskimi kluskami i zestawem surówek",
+      en: "Beef roulade with Polish dumplings and a salad selection"
+    },
+    description: {
+      de: "Rinderroulade mit Polnischen Klößen und Salatvariation. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Rolada wołowa z polskimi kluskami i zestawem surówek. Na przystawkę domowy rosół.",
+      en: "Beef roulade with Polish dumplings and a salad selection. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-10-18",
+    date: "2026-10-18",
+    kind: "weekend-menu",
+    priceEur: 18.9,
+    imgUrl: "/obiady/2026-10-18.jpg",
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Hackbällchen in Dillsoße mit Kartoffeln und Gewürzgurke",
+      pl: "Pulpety w sosie koperkowym z ziemniakami i ogórkiem kiszonym",
+      en: "Meatballs in dill sauce with potatoes and pickled cucumber"
+    },
+    description: {
+      de: "Hackbällchen in Dillsoße mit Kartoffeln und Gewürzgurke. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Pulpety w sosie koperkowym z ziemniakami i ogórkiem kiszonym. Na przystawkę domowy rosół.",
+      en: "Meatballs in dill sauce with potatoes and pickled cucumber. Served after our homemade chicken soup."
+    }
+  },
+  {
+    id: "wm-2026-10-25",
+    date: "2026-10-25",
+    kind: "weekend-menu",
+    priceEur: 17.9,
+    imgUrl: "/obiady/2026-10-25.jpg",
+    facebookUrl: FB_URL,
+    category: CAT_LUNCH,
+    starter: SUNDAY_SOUP,
+    title: {
+      de: "Schnitzel mit Pfeffer- oder Rahmsoße, Kartoffelkroketten und Salat",
+      pl: "Sznycel z sosem pieprzowym lub śmietanowym, krokietami ziemniaczanymi i sałatką",
+      en: "Schnitzel with pepper or cream sauce, potato croquettes and salad"
+    },
+    description: {
+      de: "Schnitzel nach Wahl mit Pfeffersoße oder Rahmsoße, dazu Kartoffelkroketten und Salatbeilage. Vorweg servieren wir unsere hausgemachte Hühnersuppe.",
+      pl: "Sznycel do wyboru z sosem pieprzowym lub śmietanowym, do tego krokiety ziemniaczane i sałatka. Na przystawkę domowy rosół.",
+      en: "Schnitzel with your choice of pepper or cream sauce, potato croquettes and a side salad. Served after our homemade chicken soup."
+    }
   }
 ];
 

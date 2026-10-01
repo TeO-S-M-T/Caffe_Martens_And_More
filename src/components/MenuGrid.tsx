@@ -4,6 +4,7 @@ import { MenuItem, MenuCategory } from "../types";
 import { Search, ToggleLeft, ToggleRight, Sparkles, AlertCircle, Info } from "lucide-react";
 import { useTranslation } from "../i18n";
 import MenuItemModal from "./MenuItemModal";
+import SafeImage from "./SafeImage";
 
 interface MenuGridProps {
   items: MenuItem[];
@@ -137,9 +138,10 @@ export default function MenuGrid({ items, selectedCategory, onSelectCategory }: 
                 >
                   {/* Item Image */}
                   <div className="relative h-48 overflow-hidden bg-natural-light">
-                    <img
+                    <SafeImage
                       src={item.imageUrl}
                       alt={item.name}
+                      coffee={item.category === MenuCategory.KAWY}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     {/* Dark overlay & hover info badge display */}
