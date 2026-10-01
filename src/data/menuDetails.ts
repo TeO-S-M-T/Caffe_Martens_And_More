@@ -356,19 +356,19 @@ export const MENU_DETAILS_DATA: Record<string, MenuItemDetails> = {
   },
   ka_4: {
     de: {
-      ingredients: ["Ein Shot Espresso Arabica", "Hausgemachter Lavendelblütensirup (Zucker, Wasser, getrocknete Bio-Lavendelblüten)", "Sanft geschäumte, heiße Milch"],
+      ingredients: ["Ein Shot Espresso Arabica", "Heiße Milch", "Cremiger Milchschaum"],
       allergens: ["Milch und Laktose (Kuhmilch)"],
-      baristaTip: "Wir verwenden ausschließlich echten französischen Esslavendel aus kontrolliertem Anbau. Beruhigend und lecker zugleich!"
+      baristaTip: "Erst umrühren, dann genießen — so verbinden sich Espresso und Milch zu einem runden, milden Geschmack."
     },
     pl: {
-      ingredients: ["Pojedynczy shot intensywnego espresso", "Syrop lawendowy domowej roboty (cukier trzcinowy, suszone pąki lawendy jadalnej)", "Mleko rzemieślnicze spienione trójwarstwowo"],
+      ingredients: ["Shot espresso Arabica", "Gorące mleko", "Kremowa pianka mleczna"],
       allergens: ["Mleko (mleko krowie laktoserowe)"],
-      baristaTip: "Do syropu używamy wyłącznie najlepszej jadalnej lawendy lekarskiej. Cudownie uspokajający i relaksujący napój!"
+      baristaTip: "Najpierw zamieszaj, potem pij — espresso i mleko łączą się wtedy w łagodny, okrągły smak."
     },
     en: {
-      ingredients: ["Single rich espresso shot", "Homemade lavender syrup (water, cane sugar, organic French culinary lavender buds)", "Three-layer steamed hot milk"],
+      ingredients: ["Single Arabica espresso shot", "Hot milk", "Creamy milk foam"],
       allergens: ["Milk & Lactose (standard milk)"],
-      baristaTip: "We only use certified edible French lavender flowers. Perfect for a calming afternoon break or a relaxing chat."
+      baristaTip: "Stir first, then enjoy — espresso and milk blend into a round, mellow taste."
     },
     badges: ["lactose"]
   },

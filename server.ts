@@ -525,21 +525,22 @@ let LOCALIZED_MENU_ITEMS: LocalizedMenuItem[] = [
     category: MenuCategory.KAWY,
     priceEur: 4.80,
     pricePln: 21.00,
-    imageUrl: "https://images.unsplash.com/photo-1593443320739-77f74939d0da?q=80&w=600&auto=format&fit=crop",
+    // Zdjęcie lawendowego latte nie pasuje do klasycznego — do czasu własnego zdjęcia zaślepka (SafeImage).
+    imageUrl: "",
     name: {
-      de: "Lavendel-Latte Macchiato",
-      pl: "Lawendowe Latte Macchiato",
-      en: "Lavender Latte Macchiato"
+      de: "Latte Macchiato",
+      pl: "Latte Macchiato",
+      en: "Latte Macchiato"
     },
     description: {
-      de: "Dreischichtiger Milchkaffee, verfeinert mit unserem hausgemachten Biosirup aus französischen Lavendelblüten. Ein zart-süßes, entspannendes Aroma.",
-      pl: "Trójwarstwowa kawa mleczna podawana z domowej roboty organicznym syropem z suszonych kwiatów lawendy francuskiej. Delikatnie słodki i odprężający aromat.",
-      en: "Three-layered milk coffee infusing homemade organic syrup made of dried French lavender blossoms. Delightfully sweet and relaxing."
+      de: "Der Klassiker im hohen Glas: heiße Milch, cremiger Milchschaum und ein Shot Espresso — in drei schönen Schichten.",
+      pl: "Klasyka w wysokiej szklance: gorące mleko, kremowa pianka i shot espresso — w trzech pięknych warstwach.",
+      en: "The classic in a tall glass: hot milk, creamy foam and a shot of espresso — in three beautiful layers."
     },
     tags: {
-      de: ["Saisonal", "Botanisch"],
-      pl: ["Sezonowa", "Botaniczna"],
-      en: ["Seasonal", "Botanical"]
+      de: ["Klassiker"],
+      pl: ["Klasyk"],
+      en: ["Classic"]
     }
   },
 
